@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KFZKalk1000 - KFZ Rechnungsprogramm</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { 
+      margin: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
+      background-color: #111827;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    
+    // Moderne SVG Icons
+    const Icon = ({ name, size = 18, className = "" }) => {
+      const iconSize = `${size}px`;
+      
+      const icons = {
+        home: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9,22 9,12 15,12 15,22"/>
+          </svg>
+        ),
+        users: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="m22 21-6-6"/>
+          </svg>
+        ),
+        car: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H8.5a1 1 0 0 0-.8.4L5 11l-5.16 1.86A1 1 0 0 0-1 14v3.15h3"/>
+            <circle cx="6.5" cy="16" r="2.5"/>
+            <circle cx="16.5" cy="16" r="2.5"/>
+          </svg>
+        ),
+        fileText: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+        ),
+        package: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="m7.5 4.27 9 5.15"/>
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+            <path d="m3.3 7 8.7 5 8.7-5"/>
+            <path d="M12 22V12"/>
+          </svg>
+        ),
+        plus: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12h8"/>
+            <path d="M12 8v8"/>
+          </svg>
+        ),
+        edit: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+            <path d="m15 5 4 4"/>
+          </svg>
+        ),
+        trash: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M3 6h18"/>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+        ),
+        save: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17,21 17,13 7,13 7,21"/>
+            <polyline points="7,3 7,8 15,8"/>
+          </svg>
+        ),
+        x: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M18 6 6 18"/>
+            <path d="m6 6 12 12"/>
+          </svg>
+        ),
+        dollar: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        ),
+        wrench: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        ),
+        settings: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        ),
+        calculator: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <rect x="4" y="2" width="16" height="20" rx="2"/>
+            <line x1="8" y1="6" x2="16" y2="6"/>
+            <line x1="16" y1="10" x2="16" y2="10"/>
+            <line x1="12" y1="10" x2="12" y2="10"/>
+            <line x1="8" y1="10" x2="8" y2="10"/>
+            <line x1="16" y1="14" x2="16" y2="14"/>
+            <line x1="12" y1="14" x2="12" y2="14"/>
+            <line x1="8" y1="14" x2="8" y2="14"/>
+            <line x1="16" y1="18" x2="16" y2="18"/>
+            <line x1="12" y1="18" x2="12" y2="18"/>
+            <line x1="8" y1="18" x2="8" y2="18"/>
+          </svg>
+        ),
+        convert: (
+          <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M16 3h5v5"/>
+            <path d="M8 21H3v-5"/>
+            <path d="M21 8l-7-7-7 7"/>
+            <path d="M3 16l7 7 7-7"/>
+          </svg>
+        )
+      // Invoice Form
+      const InvoiceForm = () => {
+        const [formData, setFormData] = useState(editingItem || { 
+          customer_id: '', 
+          vehicle_id: '', 
+          invoice_number: '', 
+          date: new Date().toISOString().split('T')[0], 
+          amount: '',
+          status: 'pending',
+          description: ''
+        });
+
+        // Automatische Rechnungs-Nummer generieren
+        React.useEffect(() => {
+          if (!editingItem && !formData.invoice_number) {
+            const invoiceNumber = 'RE-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-6);
+            setFormData(prev => ({...prev, invoice_number: invoiceNumber}));
+          }
+        }, [editingItem]);
+
+        const handleSubmit = async () => {
+          try {
+            if (editingItem) {
+              await api.put('/invoices/' + editingItem.id, formData);
+            } else {
+              await api.post('/invoices', formData);
+            }
+            await loadData();
+            closeModal();
+          } catch (error) {
+            console.error('Fehler beim Speichern:', error);
+          }
+        };
+
+        return React.createElement('div', { className: "space-y-4" }, [
+          React.createElement('div', { className: "flex justify-between items-center mb-4", key: "header" }, [
+            React.createElement('h3', { className: "text-xl font-bold text-white" }, editingItem ? 'Rechnung bearbeiten' : 'Neue Rechnung'),
+            React.createElement('button', { onClick: closeModal, className: "text-gray-400 hover:text-white" }, 
+              React.createElement(Icon, { name: "x", size: 24 })
+            )
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "customer-vehicle" }, [
+            React.createElement('select', {
+              value: formData.customer_id,
+              onChange: (e) => setFormData({...formData, customer_id: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }, [
+              React.createElement('option', { value: "" }, "Kunde auswählen"),
+              ...customers.map(customer => 
+                React.createElement('option', { key: customer.id, value: customer.id }, customer.name)
+              )
+            ]),
+            React.createElement('select', {
+              value: formData.vehicle_id,
+              onChange: (e) => setFormData({...formData, vehicle_id: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }, [
+              React.createElement('option', { value: "" }, "Fahrzeug auswählen"),
+              ...vehicles.filter(v => !formData.customer_id || v.customer_id == formData.customer_id).map(vehicle => 
+                React.createElement('option', { key: vehicle.id, value: vehicle.id }, vehicle.brand + ' ' + vehicle.model + ' (' + vehicle.license_plate + ')')
+              )
+            ])
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "number-status" }, [
+            React.createElement('input', {
+              type: "text",
+              placeholder: "Rechnungs-Nr.",
+              value: formData.invoice_number,
+              onChange: (e) => setFormData({...formData, invoice_number: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }),
+            React.createElement('select', {
+              value: formData.status,
+              onChange: (e) => setFormData({...formData, status: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }, [
+              React.createElement('option', { value: "pending" }, "Offen"),
+              React.createElement('option', { value: "paid" }, "Bezahlt")
+            ])
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "date-amount" }, [
+            React.createElement('input', {
+              type: "date",
+              placeholder: "Datum",
+              value: formData.date,
+              onChange: (e) => setFormData({...formData, date: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }),
+            React.createElement('input', {
+              type: "number",
+              step: "0.01",
+              placeholder: "Betrag (€)",
+              value: formData.amount,
+              onChange: (e) => setFormData({...formData, amount: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            })
+          ]),
+          React.createElement('textarea', {
+            key: "description",
+            placeholder: "Beschreibung / Erbrachte Leistungen",
+            value: formData.description,
+            onChange: (e) => setFormData({...formData, description: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 h-24"
+          }),
+          React.createElement('div', { className: "flex gap-2", key: "buttons" }, [
+            React.createElement('button', {
+              onClick: handleSubmit,
+              className: "flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-medium flex items-center justify-center gap-2"
+            }, [React.createElement(Icon, { name: "save", size: 16 }), "Speichern"]),
+            React.createElement('button', {
+              onClick: closeModal,
+              className: "flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded font-medium"
+            }, "Abbrechen")
+          ])
+        ]);
+      };
+      
+      return icons[name] || icons.home;
+    };
+
+    // API Helper Funktionen
+    const api = {
+      get: async (endpoint) => {
+        const response = await fetch('/api' + endpoint);
+        return response.json();
+      },
+      post: async (endpoint, data) => {
+        const response = await fetch('/api' + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return response.json();
+      },
+      put: async (endpoint, data) => {
+        const response = await fetch('/api' + endpoint, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return response.json();
+      },
+      delete: async (endpoint) => {
+        const response = await fetch('/api' + endpoint, {
+          method: 'DELETE'
+        });
+        return response.json();
+      }
+    };
+
+    const KFZKalk1000 = () => {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [customers, setCustomers] = useState([]);
+      const [vehicles, setVehicles] = useState([]);
+      const [invoices, setInvoices] = useState([]);
+      const [products, setProducts] = useState([]);
+      const [estimates, setEstimates] = useState([]);
+      const [dashboardData, setDashboardData] = useState({});
+      const [showModal, setShowModal] = useState(false);
+      const [modalType, setModalType] = useState('');
+      const [editingItem, setEditingItem] = useState(null);
+
+      // Daten laden
+      useEffect(() => {
+        loadData();
+      }, []);
+
+      const loadData = async () => {
+        try {
+          const [customersData, vehiclesData, invoicesData, productsData, estimatesData, dashData] = await Promise.all([
+            api.get('/customers'),
+            api.get('/vehicles'),
+            api.get('/invoices'),
+            api.get('/products'),
+            api.get('/estimates'),
+            api.get('/dashboard')
+          ]);
+          
+          setCustomers(customersData);
+          setVehicles(vehiclesData);
+          setInvoices(invoicesData);
+          setProducts(productsData);
+          setEstimates(estimatesData);
+          setDashboardData(dashData);
+        } catch (error) {
+          console.error('Fehler beim Laden der Daten:', error);
+        }
+      };
+
+      const openModal = (type, item = null) => {
+        setModalType(type);
+        setEditingItem(item);
+        setShowModal(true);
+      };
+
+      const closeModal = () => {
+        setShowModal(false);
+        setEditingItem(null);
+      };
+
+      const deleteCustomer = async (id) => {
+        if (confirm('Sind Sie sicher, dass Sie diesen Kunden löschen möchten?')) {
+          await api.delete('/customers/' + id);
+          loadData();
+        }
+      };
+
+      const deleteVehicle = async (id) => {
+        if (confirm('Sind Sie sicher, dass Sie dieses Fahrzeug löschen möchten?')) {
+          await api.delete('/vehicles/' + id);
+          loadData();
+        }
+      };
+
+      const deleteProduct = async (id) => {
+        if (confirm('Sind Sie sicher, dass Sie dieses Produkt löschen möchten?')) {
+          await api.delete('/products/' + id);
+          loadData();
+        }
+      };
+
+      const deleteEstimate = async (id) => {
+        if (confirm('Sind Sie sicher, dass Sie diesen Kostenvoranschlag löschen möchten?')) {
+          await api.delete('/estimates/' + id);
+          loadData();
+        }
+      };
+
+      const deleteInvoice = async (id) => {
+        if (confirm('Sind Sie sicher, dass Sie diese Rechnung löschen möchten?')) {
+          await api.delete('/invoices/' + id);
+          loadData();
+        }
+      };
+
+      const convertEstimateToInvoice = async (id) => {
+        if (confirm('Möchten Sie diesen Kostenvoranschlag in eine Rechnung umwandeln?')) {
+          try {
+            const result = await api.post('/estimates/' + id + '/convert', {});
+            alert('Kostenvoranschlag erfolgreich in Rechnung ' + result.invoiceNumber + ' umgewandelt!');
+            loadData();
+          } catch (error) {
+            console.error('Fehler beim Umwandeln:', error);
+            alert('Fehler beim Umwandeln des Kostenvoranschlags');
+          }
+        }
+      };
+
+      // PDF Export Funktionen
+      const printEstimate = (estimate) => {
+        const customer = customers.find(c => c.id === estimate.customer_id);
+        const vehicle = vehicles.find(v => v.id === estimate.vehicle_id);
+        
+        const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Kostenvoranschlag ${estimate.estimate_number}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+        .company { font-size: 24px; font-weight: bold; color: #2563eb; }
+        .info-section { margin: 20px 0; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .info-box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+        .info-title { font-weight: bold; color: #2563eb; margin-bottom: 10px; }
+        .estimate-details { margin: 30px 0; }
+        .amount { font-size: 24px; font-weight: bold; color: #059669; text-align: center; margin: 20px 0; padding: 15px; border: 2px solid #059669; border-radius: 10px; }
+        .status { display: inline-block; padding: 5px 15px; border-radius: 15px; font-weight: bold; }
+        .status-draft { background: #6b7280; color: white; }
+        .status-sent { background: #2563eb; color: white; }
+        .status-accepted { background: #059669; color: white; }
+        .status-rejected { background: #dc2626; color: white; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
+        @media print { body { margin: 0; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">🔧 Werkstatt Mustermann</div>
+        <div>Professionelle KFZ-Rechnungssoftware</div>
+        <div style="margin-top: 10px;">
+            <strong>KOSTENVORANSCHLAG</strong><br>
+            ${estimate.estimate_number}
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-box">
+            <div class="info-title">Kunde</div>
+            ${customer ? `
+                <strong>${customer.name}</strong><br>
+                ${customer.address}<br>
+                Tel: ${customer.phone}<br>
+                E-Mail: ${customer.email}
+            ` : 'Kunde nicht gefunden'}
+        </div>
+        
+        <div class="info-box">
+            <div class="info-title">Fahrzeug</div>
+            ${vehicle ? `
+                <strong>${vehicle.brand} ${vehicle.model}</strong><br>
+                Kennzeichen: ${vehicle.license_plate}<br>
+                Baujahr: ${vehicle.year}<br>
+                Kilometerstand: ${vehicle.mileage?.toLocaleString()} km<br>
+                VIN: ${vehicle.vin}
+            ` : 'Fahrzeug nicht gefunden'}
+        </div>
+    </div>
+
+    <div class="estimate-details">
+        <div class="info-title">Arbeiten / Beschreibung</div>
+        <p style="margin: 15px 0; padding: 15px; background: #f9fafb; border-radius: 5px;">
+            ${estimate.description || 'Keine Beschreibung verfügbar'}
+        </p>
+        
+        ${estimate.notes ? `
+        <div class="info-title" style="margin-top: 20px;">Zusätzliche Hinweise</div>
+        <p style="margin: 15px 0; padding: 15px; background: #fef3c7; border-radius: 5px;">
+            ${estimate.notes}
+        </p>
+        ` : ''}
+    </div>
+
+    <div class="amount">
+        Gesamtbetrag: ${(estimate.total_amount || 0).toFixed(2)} €
+        <div style="font-size: 14px; margin-top: 10px;">inkl. gesetzlicher MwSt.</div>
+    </div>
+
+    <div style="margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+        <div class="info-title">Angebotsinformationen</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+            <div><strong>Datum:</strong> ${estimate.date}</div>
+            <div><strong>Gültig bis:</strong> ${estimate.valid_until}</div>
+            <div><strong>Status:</strong> 
+                <span class="status status-${estimate.status}">
+                    ${estimate.status === 'draft' ? 'Entwurf' : 
+                      estimate.status === 'sent' ? 'Versendet' :
+                      estimate.status === 'accepted' ? 'Angenommen' :
+                      estimate.status === 'rejected' ? 'Abgelehnt' : estimate.status}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin: 40px 0; padding: 20px; border: 2px solid #2563eb; border-radius: 10px;">
+        <div class="info-title" style="color: #2563eb;">Kundenunterschrift</div>
+        <div style="margin: 30px 0; height: 50px; border-bottom: 1px solid #333;"></div>
+        <div style="text-align: center; font-size: 12px; color: #666;">
+            Mit meiner Unterschrift bestätige ich die Annahme dieses Kostenvoranschlags<br>
+            und beauftrage die Werkstatt mit der Durchführung der beschriebenen Arbeiten.
+        </div>
+        <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="text-align: center; border-bottom: 1px solid #666; padding-bottom: 5px;">Ort, Datum</div>
+            <div style="text-align: center; border-bottom: 1px solid #666; padding-bottom: 5px;">Unterschrift Kunde</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Erstellt mit KFZKalk1000 - Professionelle KFZ-Rechnungssoftware<br>
+        Erstellt am: ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}
+    </div>
+</body>
+</html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.focus();
+        
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      };
+
+      const printInvoice = (invoice) => {
+        const customer = customers.find(c => c.id === invoice.customer_id);
+        const vehicle = vehicles.find(v => v.id === invoice.vehicle_id);
+        
+        const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rechnung ${invoice.invoice_number}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+        .company { font-size: 24px; font-weight: bold; color: #dc2626; }
+        .info-section { margin: 20px 0; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .info-box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+        .info-title { font-weight: bold; color: #dc2626; margin-bottom: 10px; }
+        .invoice-details { margin: 30px 0; }
+        .amount { font-size: 24px; font-weight: bold; color: #dc2626; text-align: center; margin: 20px 0; padding: 15px; border: 2px solid #dc2626; border-radius: 10px; }
+        .status { display: inline-block; padding: 5px 15px; border-radius: 15px; font-weight: bold; }
+        .status-paid { background: #059669; color: white; }
+        .status-pending { background: #f59e0b; color: white; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
+        @media print { body { margin: 0; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company">🔧 Werkstatt Mustermann</div>
+        <div>Professionelle KFZ-Rechnungssoftware</div>
+        <div style="margin-top: 10px;">
+            <strong>RECHNUNG</strong><br>
+            ${invoice.invoice_number}
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-box">
+            <div class="info-title">Rechnungsempfänger</div>
+            ${customer ? `
+                <strong>${customer.name}</strong><br>
+                ${customer.address}<br>
+                Tel: ${customer.phone}<br>
+                E-Mail: ${customer.email}
+            ` : 'Kunde nicht gefunden'}
+        </div>
+        
+        <div class="info-box">
+            <div class="info-title">Fahrzeug</div>
+            ${vehicle ? `
+                <strong>${vehicle.brand} ${vehicle.model}</strong><br>
+                Kennzeichen: ${vehicle.license_plate}<br>
+                Baujahr: ${vehicle.year}<br>
+                Kilometerstand: ${vehicle.mileage?.toLocaleString()} km<br>
+                VIN: ${vehicle.vin}
+            ` : 'Fahrzeug nicht gefunden'}
+        </div>
+    </div>
+
+    <div class="invoice-details">
+        <div class="info-title">Erbrachte Leistungen</div>
+        <p style="margin: 15px 0; padding: 15px; background: #f9fafb; border-radius: 5px;">
+            ${invoice.description || 'Keine Beschreibung verfügbar'}
+        </p>
+    </div>
+
+    <div class="amount">
+        Rechnungsbetrag: ${(invoice.amount || 0).toFixed(2)} €
+        <div style="font-size: 14px; margin-top: 10px;">inkl. gesetzlicher MwSt.</div>
+    </div>
+
+    <div style="margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+        <div class="info-title">Rechnungsinformationen</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+            <div><strong>Rechnungsdatum:</strong> ${invoice.date}</div>
+            <div><strong>Zahlungsziel:</strong> Sofort fällig</div>
+            <div><strong>Status:</strong> 
+                <span class="status status-${invoice.status}">
+                    ${invoice.status === 'paid' ? 'Bezahlt' : 'Offen'}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin: 40px 0; padding: 20px; background: #fef3c7; border-radius: 10px;">
+        <div class="info-title">Zahlungshinweise</div>
+        <p style="margin: 10px 0;">
+            Bitte überweisen Sie den Rechnungsbetrag unter Angabe der Rechnungsnummer 
+            <strong>${invoice.invoice_number}</strong> auf unser Bankkonto.
+        </p>
+        <div style="margin-top: 15px; font-weight: bold;">
+            IBAN: DE12 3456 7890 1234 5678 90<br>
+            BIC: MUSTDE12XXX<br>
+            Verwendungszweck: ${invoice.invoice_number}
+        </div>
+    </div>
+
+    <div class="footer">
+        Erstellt mit KFZKalk1000 - Professionelle KFZ-Rechnungssoftware<br>
+        Erstellt am: ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}
+    </div>
+</body>
+</html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.focus();
+        
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      };
+
+      const getStatusBadge = (status) => {
+        const statusMap = {
+          draft: { label: 'Entwurf', className: 'bg-gray-600' },
+          sent: { label: 'Versendet', className: 'bg-blue-600' },
+          accepted: { label: 'Angenommen', className: 'bg-green-600' },
+          rejected: { label: 'Abgelehnt', className: 'bg-red-600' },
+          converted: { label: 'Umgewandelt', className: 'bg-purple-600' }
+        };
+        
+        const statusInfo = statusMap[status] || { label: status, className: 'bg-gray-600' };
+        return React.createElement('span', {
+          className: "text-xs px-2 py-1 rounded text-white " + statusInfo.className
+        }, statusInfo.label);
+      };
+
+      // Modal Component
+      const Modal = ({ children }) => {
+        if (!showModal) return null;
+        
+        return React.createElement('div', {
+          className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        }, React.createElement('div', {
+          className: "bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 border border-gray-700"
+        }, children));
+      };
+
+      // Customer Form
+      const CustomerForm = () => {
+        const [formData, setFormData] = useState(editingItem || { name: '', email: '', phone: '', address: '' });
+
+        const handleSubmit = async () => {
+          try {
+            if (editingItem) {
+              await api.put('/customers/' + editingItem.id, formData);
+            } else {
+              await api.post('/customers', formData);
+            }
+            await loadData();
+            closeModal();
+          } catch (error) {
+            console.error('Fehler beim Speichern:', error);
+          }
+        };
+
+        return React.createElement('div', { className: "space-y-4" }, [
+          React.createElement('div', { className: "flex justify-between items-center mb-4", key: "header" }, [
+            React.createElement('h3', { className: "text-xl font-bold text-white" }, editingItem ? 'Kunde bearbeiten' : 'Neuer Kunde'),
+            React.createElement('button', { onClick: closeModal, className: "text-gray-400 hover:text-white" }, 
+              React.createElement(Icon, { name: "x", size: 24 })
+            )
+          ]),
+          React.createElement('input', {
+            key: "name",
+            type: "text",
+            placeholder: "Name",
+            value: formData.name,
+            onChange: (e) => setFormData({...formData, name: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('input', {
+            key: "email",
+            type: "email",
+            placeholder: "E-Mail",
+            value: formData.email,
+            onChange: (e) => setFormData({...formData, email: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('input', {
+            key: "phone",
+            type: "tel",
+            placeholder: "Telefon",
+            value: formData.phone,
+            onChange: (e) => setFormData({...formData, phone: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('textarea', {
+            key: "address",
+            placeholder: "Adresse",
+            value: formData.address,
+            onChange: (e) => setFormData({...formData, address: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 h-20"
+          }),
+          React.createElement('div', { className: "flex gap-2", key: "buttons" }, [
+            React.createElement('button', {
+              onClick: handleSubmit,
+              className: "flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-medium flex items-center justify-center gap-2"
+            }, [React.createElement(Icon, { name: "save", size: 16 }), "Speichern"]),
+            React.createElement('button', {
+              onClick: closeModal,
+              className: "flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded font-medium"
+            }, "Abbrechen")
+          ])
+        ]);
+      };
+
+      // Vehicle Form
+      const VehicleForm = () => {
+        const [formData, setFormData] = useState(editingItem || { 
+          customer_id: '', brand: '', model: '', year: '', license_plate: '', vin: '', mileage: '' 
+        });
+
+        const handleSubmit = async () => {
+          try {
+            if (editingItem) {
+              await api.put('/vehicles/' + editingItem.id, formData);
+            } else {
+              await api.post('/vehicles', formData);
+            }
+            await loadData();
+            closeModal();
+          } catch (error) {
+            console.error('Fehler beim Speichern:', error);
+          }
+        };
+
+        return React.createElement('div', { className: "space-y-4" }, [
+          React.createElement('div', { className: "flex justify-between items-center mb-4", key: "header" }, [
+            React.createElement('h3', { className: "text-xl font-bold text-white" }, editingItem ? 'Fahrzeug bearbeiten' : 'Neues Fahrzeug'),
+            React.createElement('button', { onClick: closeModal, className: "text-gray-400 hover:text-white" }, 
+              React.createElement(Icon, { name: "x", size: 24 })
+            )
+          ]),
+          React.createElement('select', {
+            key: "customer",
+            value: formData.customer_id,
+            onChange: (e) => setFormData({...formData, customer_id: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }, [
+            React.createElement('option', { value: "" }, "Kunde auswählen"),
+            ...customers.map(customer => 
+              React.createElement('option', { key: customer.id, value: customer.id }, customer.name)
+            )
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "brand-model" }, [
+            React.createElement('input', {
+              type: "text",
+              placeholder: "Marke",
+              value: formData.brand,
+              onChange: (e) => setFormData({...formData, brand: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }),
+            React.createElement('input', {
+              type: "text",
+              placeholder: "Modell",
+              value: formData.model,
+              onChange: (e) => setFormData({...formData, model: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            })
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "year-plate" }, [
+            React.createElement('input', {
+              type: "number",
+              placeholder: "Baujahr",
+              value: formData.year,
+              onChange: (e) => setFormData({...formData, year: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }),
+            React.createElement('input', {
+              type: "text",
+              placeholder: "Kennzeichen",
+              value: formData.license_plate,
+              onChange: (e) => setFormData({...formData, license_plate: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            })
+          ]),
+          React.createElement('input', {
+            key: "vin",
+            type: "text",
+            placeholder: "Fahrgestellnummer (VIN)",
+            value: formData.vin,
+            onChange: (e) => setFormData({...formData, vin: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('input', {
+            key: "mileage",
+            type: "number",
+            placeholder: "Kilometerstand",
+            value: formData.mileage,
+            onChange: (e) => setFormData({...formData, mileage: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('div', { className: "flex gap-2", key: "buttons" }, [
+            React.createElement('button', {
+              onClick: handleSubmit,
+              className: "flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-medium flex items-center justify-center gap-2"
+            }, [React.createElement(Icon, { name: "save", size: 16 }), "Speichern"]),
+            React.createElement('button', {
+              onClick: closeModal,
+              className: "flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded font-medium"
+            }, "Abbrechen")
+          ])
+        ]);
+      };
+
+      // Product Form
+      const ProductForm = () => {
+        const [formData, setFormData] = useState(editingItem || { name: '', price: '', stock: '', category: '' });
+
+        const handleSubmit = async () => {
+          try {
+            if (editingItem) {
+              await api.put('/products/' + editingItem.id, formData);
+            } else {
+              await api.post('/products', formData);
+            }
+            await loadData();
+            closeModal();
+          } catch (error) {
+            console.error('Fehler beim Speichern:', error);
+          }
+        };
+
+        return React.createElement('div', { className: "space-y-4" }, [
+          React.createElement('div', { className: "flex justify-between items-center mb-4", key: "header" }, [
+            React.createElement('h3', { className: "text-xl font-bold text-white" }, editingItem ? 'Produkt bearbeiten' : 'Neues Produkt'),
+            React.createElement('button', { onClick: closeModal, className: "text-gray-400 hover:text-white" }, 
+              React.createElement(Icon, { name: "x", size: 24 })
+            )
+          ]),
+          React.createElement('input', {
+            key: "name",
+            type: "text",
+            placeholder: "Produktname",
+            value: formData.name,
+            onChange: (e) => setFormData({...formData, name: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "price-stock" }, [
+            React.createElement('input', {
+              type: "number",
+              step: "0.01",
+              placeholder: "Preis (€)",
+              value: formData.price,
+              onChange: (e) => setFormData({...formData, price: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }),
+            React.createElement('input', {
+              type: "number",
+              placeholder: "Lagerbestand",
+              value: formData.stock,
+              onChange: (e) => setFormData({...formData, stock: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            })
+          ]),
+          React.createElement('input', {
+            key: "category",
+            type: "text",
+            placeholder: "Kategorie",
+            value: formData.category,
+            onChange: (e) => setFormData({...formData, category: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('div', { className: "flex gap-2", key: "buttons" }, [
+            React.createElement('button', {
+              onClick: handleSubmit,
+              className: "flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-medium flex items-center justify-center gap-2"
+            }, [React.createElement(Icon, { name: "save", size: 16 }), "Speichern"]),
+            React.createElement('button', {
+              onClick: closeModal,
+              className: "flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded font-medium"
+            }, "Abbrechen")
+          ])
+        ]);
+      };
+
+      // Estimate Form
+      const EstimateForm = () => {
+        const [formData, setFormData] = useState(editingItem || { 
+          customer_id: '', 
+          vehicle_id: '', 
+          estimate_number: '', 
+          date: new Date().toISOString().split('T')[0], 
+          valid_until: '',
+          status: 'draft',
+          total_amount: '',
+          description: '',
+          notes: ''
+        });
+
+        // Automatische Kostenvoranschlag-Nummer generieren
+        React.useEffect(() => {
+          if (!editingItem && !formData.estimate_number) {
+            const estimateNumber = 'KV-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-6);
+            setFormData(prev => ({...prev, estimate_number: estimateNumber}));
+          }
+        }, [editingItem]);
+
+        const handleSubmit = async () => {
+          try {
+            if (editingItem) {
+              await api.put('/estimates/' + editingItem.id, formData);
+            } else {
+              await api.post('/estimates', formData);
+            }
+            await loadData();
+            closeModal();
+          } catch (error) {
+            console.error('Fehler beim Speichern:', error);
+          }
+        };
+
+        return React.createElement('div', { className: "space-y-4" }, [
+          React.createElement('div', { className: "flex justify-between items-center mb-4", key: "header" }, [
+            React.createElement('h3', { className: "text-xl font-bold text-white" }, editingItem ? 'Kostenvoranschlag bearbeiten' : 'Neuer Kostenvoranschlag'),
+            React.createElement('button', { onClick: closeModal, className: "text-gray-400 hover:text-white" }, 
+              React.createElement(Icon, { name: "x", size: 24 })
+            )
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "customer-vehicle" }, [
+            React.createElement('select', {
+              value: formData.customer_id,
+              onChange: (e) => setFormData({...formData, customer_id: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }, [
+              React.createElement('option', { value: "" }, "Kunde auswählen"),
+              ...customers.map(customer => 
+                React.createElement('option', { key: customer.id, value: customer.id }, customer.name)
+              )
+            ]),
+            React.createElement('select', {
+              value: formData.vehicle_id,
+              onChange: (e) => setFormData({...formData, vehicle_id: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }, [
+              React.createElement('option', { value: "" }, "Fahrzeug auswählen"),
+              ...vehicles.filter(v => !formData.customer_id || v.customer_id == formData.customer_id).map(vehicle => 
+                React.createElement('option', { key: vehicle.id, value: vehicle.id }, vehicle.brand + ' ' + vehicle.model + ' (' + vehicle.license_plate + ')')
+              )
+            ])
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "number-status" }, [
+            React.createElement('input', {
+              type: "text",
+              placeholder: "Kostenvoranschlag-Nr.",
+              value: formData.estimate_number,
+              onChange: (e) => setFormData({...formData, estimate_number: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }),
+            React.createElement('select', {
+              value: formData.status,
+              onChange: (e) => setFormData({...formData, status: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }, [
+              React.createElement('option', { value: "draft" }, "Entwurf"),
+              React.createElement('option', { value: "sent" }, "Versendet"),
+              React.createElement('option', { value: "accepted" }, "Angenommen"),
+              React.createElement('option', { value: "rejected" }, "Abgelehnt")
+            ])
+          ]),
+          React.createElement('div', { className: "grid grid-cols-2 gap-2", key: "dates" }, [
+            React.createElement('input', {
+              type: "date",
+              placeholder: "Datum",
+              value: formData.date,
+              onChange: (e) => setFormData({...formData, date: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            }),
+            React.createElement('input', {
+              type: "date",
+              placeholder: "Gültig bis",
+              value: formData.valid_until,
+              onChange: (e) => setFormData({...formData, valid_until: e.target.value}),
+              className: "p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+            })
+          ]),
+          React.createElement('input', {
+            key: "amount",
+            type: "number",
+            step: "0.01",
+            placeholder: "Gesamtbetrag (€)",
+            value: formData.total_amount,
+            onChange: (e) => setFormData({...formData, total_amount: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500"
+          }),
+          React.createElement('textarea', {
+            key: "description",
+            placeholder: "Beschreibung",
+            value: formData.description,
+            onChange: (e) => setFormData({...formData, description: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 h-20"
+          }),
+          React.createElement('textarea', {
+            key: "notes",
+            placeholder: "Interne Notizen",
+            value: formData.notes,
+            onChange: (e) => setFormData({...formData, notes: e.target.value}),
+            className: "w-full p-3 bg-gray-700 text-white rounded border border-gray-600 focus:border-blue-500 h-16"
+          }),
+          React.createElement('div', { className: "flex gap-2", key: "buttons" }, [
+            React.createElement('button', {
+              onClick: handleSubmit,
+              className: "flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-medium flex items-center justify-center gap-2"
+            }, [React.createElement(Icon, { name: "save", size: 16 }), "Speichern"]),
+            React.createElement('button', {
+              onClick: closeModal,
+              className: "flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded font-medium"
+            }, "Abbrechen")
+          ])
+        ]);
+      };
+
+      // Dashboard Content
+      const renderDashboard = () => {
+        return React.createElement('div', { className: "space-y-6" }, [
+          React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-6", key: "stats1" }, [
+            React.createElement('div', { className: "bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-lg text-white" }, [
+              React.createElement('div', { className: "flex items-center justify-between" }, [
+                React.createElement('div', {}, [
+                  React.createElement('p', { className: "text-blue-100" }, "Gesamtumsatz"),
+                  React.createElement('p', { className: "text-2xl font-bold" }, (dashboardData.totalRevenue || 0).toFixed(2) + " €")
+                ]),
+                React.createElement(Icon, { name: "dollar", size: 32, className: "text-blue-200" })
+              ])
+            ]),
+            React.createElement('div', { className: "bg-gradient-to-r from-green-600 to-green-800 p-6 rounded-lg text-white" }, [
+              React.createElement('div', { className: "flex items-center justify-between" }, [
+                React.createElement('div', {}, [
+                  React.createElement('p', { className: "text-green-100" }, "Kunden"),
+                  React.createElement('p', { className: "text-2xl font-bold" }, dashboardData.customerCount || 0)
+                ]),
+                React.createElement(Icon, { name: "users", size: 32, className: "text-green-200" })
+              ])
+            ]),
+            React.createElement('div', { className: "bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-lg text-white" }, [
+              React.createElement('div', { className: "flex items-center justify-between" }, [
+                React.createElement('div', {}, [
+                  React.createElement('p', { className: "text-purple-100" }, "Fahrzeuge"),
+                  React.createElement('p', { className: "text-2xl font-bold" }, dashboardData.vehicleCount || 0)
+                ]),
+                React.createElement(Icon, { name: "car", size: 32, className: "text-purple-200" })
+              ])
+            ])
+          ]),
+          React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-3 gap-6", key: "stats2" }, [
+            React.createElement('div', { className: "bg-gradient-to-r from-orange-600 to-orange-800 p-6 rounded-lg text-white" }, [
+              React.createElement('div', { className: "flex items-center justify-between" }, [
+                React.createElement('div', {}, [
+                  React.createElement('p', { className: "text-orange-100" }, "Offene Rechnungen"),
+                  React.createElement('p', { className: "text-2xl font-bold" }, dashboardData.pendingInvoices || 0)
+                ]),
+                React.createElement(Icon, { name: "fileText", size: 32, className: "text-orange-200" })
+              ])
+            ]),
+            React.createElement('div', { className: "bg-gradient-to-r from-indigo-600 to-indigo-800 p-6 rounded-lg text-white" }, [
+              React.createElement('div', { className: "flex items-center justify-between" }, [
+                React.createElement('div', {}, [
+                  React.createElement('p', { className: "text-indigo-100" }, "Kostenvoranschläge"),
+                  React.createElement('p', { className: "text-2xl font-bold" }, dashboardData.totalEstimates || 0)
+                ]),
+                React.createElement(Icon, { name: "calculator", size: 32, className: "text-indigo-200" })
+              ])
+            ]),
+            React.createElement('div', { className: "bg-gradient-to-r from-teal-600 to-teal-800 p-6 rounded-lg text-white" }, [
+              React.createElement('div', { className: "flex items-center justify-between" }, [
+                React.createElement('div', {}, [
+                  React.createElement('p', { className: "text-teal-100" }, "Offene KV"),
+                  React.createElement('p', { className: "text-2xl font-bold" }, dashboardData.pendingEstimates || 0)
+                ]),
+                React.createElement(Icon, { name: "calculator", size: 32, className: "text-teal-200" })
+              ])
+            ])
+          ]),
+          React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 gap-6", key: "recent" }, [
+            React.createElement('div', { className: "bg-gray-800 rounded-lg p-6 border border-gray-700" }, [
+              React.createElement('h3', { className: "text-xl font-bold text-white mb-4" }, "Letzte Rechnungen"),
+              React.createElement('div', { className: "space-y-3" }, 
+                invoices.slice(0, 5).map(invoice => 
+                  React.createElement('div', { 
+                    key: invoice.id, 
+                    className: "flex justify-between items-center p-3 bg-gray-700 rounded" 
+                  }, [
+                    React.createElement('div', {}, [
+                      React.createElement('p', { className: "text-white font-medium" }, invoice.customer_name || 'Unbekannt'),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, invoice.vehicle_info || 'Unbekannt'),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, invoice.description || '')
+                    ]),
+                    React.createElement('div', { className: "text-right" }, [
+                      React.createElement('p', { className: "text-white font-bold" }, (invoice.amount || 0).toFixed(2) + " €"),
+                      React.createElement('span', { 
+                        className: "text-xs px-2 py-1 rounded " + (invoice.status === 'paid' ? 'bg-green-600 text-white' : 'bg-orange-600 text-white')
+                      }, invoice.status === 'paid' ? 'Bezahlt' : 'Offen')
+                    ])
+                  ])
+                )
+              )
+            ]),
+            React.createElement('div', { className: "bg-gray-800 rounded-lg p-6 border border-gray-700" }, [
+              React.createElement('h3', { className: "text-xl font-bold text-white mb-4" }, "Letzte Kostenvoranschläge"),
+              React.createElement('div', { className: "space-y-3" }, 
+                estimates.slice(0, 5).map(estimate => 
+                  React.createElement('div', { 
+                    key: estimate.id, 
+                    className: "flex justify-between items-center p-3 bg-gray-700 rounded" 
+                  }, [
+                    React.createElement('div', {}, [
+                      React.createElement('p', { className: "text-white font-medium" }, estimate.customer_name || 'Unbekannt'),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, estimate.vehicle_info || 'Unbekannt'),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, estimate.description || '')
+                    ]),
+                    React.createElement('div', { className: "text-right" }, [
+                      React.createElement('p', { className: "text-white font-bold" }, (estimate.total_amount || 0).toFixed(2) + " €"),
+                      getStatusBadge(estimate.status)
+                    ])
+                  ])
+                )
+              )
+            ])
+          ])
+        ]);
+      };
+
+      // Customers Content
+      const renderCustomers = () => {
+        return React.createElement('div', { className: "space-y-6" }, [
+          React.createElement('div', { className: "flex justify-between items-center", key: "header" }, [
+            React.createElement('h2', { className: "text-2xl font-bold text-white" }, "Kundenverwaltung"),
+            React.createElement('button', {
+              onClick: () => openModal('customer'),
+              className: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            }, [React.createElement(Icon, { name: "plus", size: 16 }), "Neuer Kunde"])
+          ]),
+          React.createElement('div', { className: "bg-gray-800 rounded-lg border border-gray-700", key: "content" }, [
+            React.createElement('div', { className: "divide-y divide-gray-700" },
+              customers.map(customer => 
+                React.createElement('div', { 
+                  key: customer.id, 
+                  className: "p-4 hover:bg-gray-700" 
+                }, [
+                  React.createElement('div', { className: "flex justify-between items-start" }, [
+                    React.createElement('div', {}, [
+                      React.createElement('h3', { className: "font-medium text-white" }, customer.name),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, customer.email),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, customer.phone),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, customer.address)
+                    ]),
+                    React.createElement('div', { className: "flex space-x-2" }, [
+                      React.createElement('button', {
+                        onClick: () => openModal('customer', customer),
+                        className: "text-blue-400 hover:text-blue-300"
+                      }, React.createElement(Icon, { name: "edit", size: 16 })),
+                      React.createElement('button', {
+                        onClick: () => deleteCustomer(customer.id),
+                        className: "text-red-400 hover:text-red-300"
+                      }, React.createElement(Icon, { name: "trash", size: 16 }))
+                    ])
+                  ])
+                ])
+              )
+            )
+          ])
+        ]);
+      };
+
+      // Vehicles Content
+      const renderVehicles = () => {
+        return React.createElement('div', { className: "space-y-6" }, [
+          React.createElement('div', { className: "flex justify-between items-center", key: "header" }, [
+            React.createElement('h2', { className: "text-2xl font-bold text-white" }, "Fahrzeugverwaltung"),
+            React.createElement('button', {
+              onClick: () => openModal('vehicle'),
+              className: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            }, [React.createElement(Icon, { name: "plus", size: 16 }), "Neues Fahrzeug"])
+          ]),
+          React.createElement('div', { className: "bg-gray-800 rounded-lg border border-gray-700", key: "content" }, [
+            React.createElement('div', { className: "divide-y divide-gray-700" },
+              vehicles.map(vehicle => 
+                React.createElement('div', { 
+                  key: vehicle.id, 
+                  className: "p-4 hover:bg-gray-700" 
+                }, [
+                  React.createElement('div', { className: "flex justify-between items-start" }, [
+                    React.createElement('div', {}, [
+                      React.createElement('h3', { className: "font-medium text-white" }, vehicle.brand + " " + vehicle.model),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, "Besitzer: " + (vehicle.customer_name || 'Unbekannt')),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, "Kennzeichen: " + vehicle.license_plate),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, "Baujahr: " + vehicle.year + " | KM: " + (vehicle.mileage || 0).toLocaleString()),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, "VIN: " + vehicle.vin)
+                    ]),
+                    React.createElement('div', { className: "flex space-x-2" }, [
+                      React.createElement('button', {
+                        onClick: () => openModal('vehicle', vehicle),
+                        className: "text-blue-400 hover:text-blue-300"
+                      }, React.createElement(Icon, { name: "edit", size: 16 })),
+                      React.createElement('button', {
+                        onClick: () => deleteVehicle(vehicle.id),
+                        className: "text-red-400 hover:text-red-300"
+                      }, React.createElement(Icon, { name: "trash", size: 16 }))
+                    ])
+                  ])
+                ])
+              )
+            )
+          ])
+        ]);
+      };
+
+      // Products Content
+      const renderProducts = () => {
+        return React.createElement('div', { className: "space-y-6" }, [
+          React.createElement('div', { className: "flex justify-between items-center", key: "header" }, [
+            React.createElement('h2', { className: "text-2xl font-bold text-white" }, "Produktverwaltung"),
+            React.createElement('button', {
+              onClick: () => openModal('product'),
+              className: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            }, [React.createElement(Icon, { name: "plus", size: 16 }), "Neues Produkt"])
+          ]),
+          React.createElement('div', { className: "bg-gray-800 rounded-lg border border-gray-700", key: "content" }, [
+            React.createElement('div', { className: "divide-y divide-gray-700" },
+              products.map(product => 
+                React.createElement('div', { 
+                  key: product.id, 
+                  className: "p-4 hover:bg-gray-700" 
+                }, [
+                  React.createElement('div', { className: "flex justify-between items-start" }, [
+                    React.createElement('div', {}, [
+                      React.createElement('h3', { className: "font-medium text-white" }, product.name),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, "Kategorie: " + product.category),
+                      React.createElement('p', { className: "text-gray-400 text-sm" }, "Lagerbestand: " + product.stock + " Stück")
+                    ]),
+                    React.createElement('div', { className: "text-right" }, [
+                      React.createElement('p', { className: "text-white font-bold text-lg" }, (product.price || 0).toFixed(2) + " €"),
+                      React.createElement('div', { className: "flex space-x-2 mt-2" }, [
+                        React.createElement('button', {
+                          onClick: () => openModal('product', product),
+                          className: "text-blue-400 hover:text-blue-300"
+                        }, React.createElement(Icon, { name: "edit", size: 16 })),
+                        React.createElement('button', {
+                          onClick: () => deleteProduct(product.id),
+                          className: "text-red-400 hover:text-red-300"
+                        }, React.createElement(Icon, { name: "trash", size: 16 }))
+                      ])
+                    ])
+                  ])
+                ])
+              )
+            )
+          ])
+        ]);
+      };
+
+      // Estimates Content
+      const renderEstimates = () => {
+        return React.createElement('div', { className: "space-y-6" }, [
+          React.createElement('div', { className: "flex justify-between items-center", key: "header" }, [
+            React.createElement('h2', { className: "text-2xl font-bold text-white" }, "Kostenvoranschläge"),
+            React.createElement('button', {
+              onClick: () => openModal('estimate'),
+              className: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            }, [React.createElement(Icon, { name: "plus", size: 16 }), "Neuer Kostenvoranschlag"])
+          ]),
+          React.createElement('div', { className: "bg-gray-800 rounded-lg border border-gray-700", key: "content" }, [
+            React.createElement('div', { className: "divide-y divide-gray-700" },
+              estimates.map(estimate => 
+                React.createElement('div', { 
+                  key: estimate.id, 
+                  className: "p-4 hover:bg-gray-700" 
+                }, [
+                  React.createElement('div', { className: "flex justify-between items-start" }, [
+                    React.createElement('div', { className: "flex-1" }, [
+                      React.createElement('div', { className: "flex justify-between items-start mb-2" }, [
+                        React.createElement('div', {}, [
+                          React.createElement('h3', { className: "font-medium text-white" }, estimate.estimate_number || 'KV-' + estimate.id),
+                          React.createElement('p', { className: "text-gray-400 text-sm" }, "Kunde: " + (estimate.customer_name || 'Unbekannt')),
+                          React.createElement('p', { className: "text-gray-400 text-sm" }, "Fahrzeug: " + (estimate.vehicle_info || 'Unbekannt'))
+                        ]),
+                        React.createElement('div', { className: "text-right" }, [
+                          React.createElement('p', { className: "text-white font-bold text-lg" }, (estimate.total_amount || 0).toFixed(2) + " €"),
+                          getStatusBadge(estimate.status)
+                        ])
+                      ]),
+                      React.createElement('p', { className: "text-gray-400 text-sm mb-2" }, estimate.description || ''),
+                      React.createElement('div', { className: "flex justify-between items-center text-xs text-gray-500" }, [
+                        React.createElement('span', {}, "Erstellt: " + (estimate.date || '')),
+                        React.createElement('span', {}, "Gültig bis: " + (estimate.valid_until || ''))
+                      ]),
+                      React.createElement('div', { className: "flex space-x-2 mt-3" }, [
+                        React.createElement('button', {
+                          onClick: () => openModal('estimate', estimate),
+                          className: "text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                        }, [React.createElement(Icon, { name: "edit", size: 14 }), "Bearbeiten"]),
+                        React.createElement('button', {
+                          onClick: () => printEstimate(estimate),
+                          className: "text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                        }, [React.createElement(Icon, { name: "fileText", size: 14 }), "PDF erstellen"]),
+                        estimate.status === 'accepted' || estimate.status === 'sent' ? React.createElement('button', {
+                          onClick: () => convertEstimateToInvoice(estimate.id),
+                          className: "text-green-400 hover:text-green-300 flex items-center gap-1"
+                        }, [React.createElement(Icon, { name: "convert", size: 14 }), "In Rechnung umwandeln"]) : null,
+                        React.createElement('button', {
+                          onClick: () => deleteEstimate(estimate.id),
+                          className: "text-red-400 hover:text-red-300 flex items-center gap-1"
+                        }, [React.createElement(Icon, { name: "trash", size: 14 }), "Löschen"])
+                      ])
+                    ])
+                  ])
+                ])
+              )
+            )
+          ])
+        ]);
+      };
+
+      // Invoices Content
+      const renderInvoices = () => {
+        return React.createElement('div', { className: "space-y-6" }, [
+          React.createElement('div', { className: "flex justify-between items-center", key: "header" }, [
+            React.createElement('h2', { className: "text-2xl font-bold text-white" }, "Rechnungsverwaltung"),
+            React.createElement('button', {
+              onClick: () => openModal('invoice'),
+              className: "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            }, [React.createElement(Icon, { name: "plus", size: 16 }), "Neue Rechnung"])
+          ]),
+          React.createElement('div', { className: "bg-gray-800 rounded-lg border border-gray-700", key: "content" }, [
+            React.createElement('div', { className: "divide-y divide-gray-700" },
+              invoices.map(invoice => 
+                React.createElement('div', { 
+                  key: invoice.id, 
+                  className: "p-4 hover:bg-gray-700" 
+                }, [
+                  React.createElement('div', { className: "flex justify-between items-start" }, [
+                    React.createElement('div', { className: "flex-1" }, [
+                      React.createElement('div', { className: "flex justify-between items-start mb-2" }, [
+                        React.createElement('div', {}, [
+                          React.createElement('h3', { className: "font-medium text-white" }, invoice.invoice_number || 'RE-' + invoice.id),
+                          React.createElement('p', { className: "text-gray-400 text-sm" }, "Kunde: " + (invoice.customer_name || 'Unbekannt')),
+                          React.createElement('p', { className: "text-gray-400 text-sm" }, "Fahrzeug: " + (invoice.vehicle_info || 'Unbekannt'))
+                        ]),
+                        React.createElement('div', { className: "text-right" }, [
+                          React.createElement('p', { className: "text-white font-bold text-lg" }, (invoice.amount || 0).toFixed(2) + " €"),
+                          React.createElement('span', { 
+                            className: "text-xs px-2 py-1 rounded " + (invoice.status === 'paid' ? 'bg-green-600 text-white' : 'bg-orange-600 text-white')
+                          }, invoice.status === 'paid' ? 'Bezahlt' : 'Offen')
+                        ])
+                      ]),
+                      React.createElement('p', { className: "text-gray-400 text-sm mb-2" }, invoice.description || ''),
+                      React.createElement('div', { className: "flex justify-between items-center text-xs text-gray-500" }, [
+                        React.createElement('span', {}, "Erstellt: " + (invoice.date || ''))
+                      ]),
+                      React.createElement('div', { className: "flex space-x-2 mt-3" }, [
+                        React.createElement('button', {
+                          onClick: () => openModal('invoice', invoice),
+                          className: "text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                        }, [React.createElement(Icon, { name: "edit", size: 14 }), "Bearbeiten"]),
+                        React.createElement('button', {
+                          onClick: () => printInvoice(invoice),
+                          className: "text-green-400 hover:text-green-300 flex items-center gap-1"
+                        }, [React.createElement(Icon, { name: "fileText", size: 14 }), "PDF erstellen"]),
+                        React.createElement('button', {
+                          onClick: () => deleteInvoice(invoice.id),
+                          className: "text-red-400 hover:text-red-300 flex items-center gap-1"
+                        }, [React.createElement(Icon, { name: "trash", size: 14 }), "Löschen"])
+                      ])
+                    ])
+                  ])
+                ])
+              )
+            )
+          ])
+        ]);
+      };
+
+      // Content renderer
+      const renderContent = () => {
+        switch (activeTab) {
+          case 'dashboard': return renderDashboard();
+          case 'customers': return renderCustomers();
+          case 'vehicles': return renderVehicles();
+          case 'estimates': return renderEstimates();
+          case 'invoices': return renderInvoices();
+          case 'products': return renderProducts();
+          default: return React.createElement('div', { className: "text-white" }, "Bereich wird geladen...");
+        }
+      };
+
+      return React.createElement('div', { className: "min-h-screen bg-gray-900 text-white" }, [
+        // Header
+        React.createElement('header', { 
+          className: "bg-gray-800 border-b border-gray-700 p-4",
+          key: "header"
+        }, [
+          React.createElement('div', { className: "flex items-center justify-between" }, [
+            React.createElement('div', { className: "flex items-center space-x-3" }, [
+              React.createElement('div', { className: "bg-blue-600 p-2 rounded-lg" }, 
+                React.createElement(Icon, { name: "wrench", size: 24, className: "text-white" })
+              ),
+              React.createElement('div', {}, [
+                React.createElement('h1', { className: "text-2xl font-bold text-white" }, "KFZKalk1000"),
+                React.createElement('p', { className: "text-gray-400 text-sm" }, "Professionelle KFZ-Rechnungssoftware")
+              ])
+            ]),
+            React.createElement('div', { className: "flex items-center space-x-4" }, [
+              React.createElement('button', { className: "text-gray-400 hover:text-white" }, 
+                React.createElement(Icon, { name: "settings", size: 20 })
+              ),
+              React.createElement('div', { className: "text-right" }, [
+                React.createElement('p', { className: "text-sm text-white" }, "Werkstatt Mustermann"),
+                React.createElement('p', { className: "text-xs text-gray-400" }, "Eingeloggt als Admin")
+              ])
+            ])
+          ])
+        ]),
+
+        React.createElement('div', { className: "flex", key: "main" }, [
+          // Sidebar
+          React.createElement('aside', { className: "w-64 bg-gray-800 border-r border-gray-700 min-h-screen" }, [
+            React.createElement('nav', { className: "p-4" }, [
+              React.createElement('ul', { className: "space-y-2" }, [
+                React.createElement('li', {}, [
+                  React.createElement('button', {
+                    onClick: () => setActiveTab('dashboard'),
+                    className: "w-full text-left p-3 rounded flex items-center space-x-3 " + (activeTab === 'dashboard' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700')
+                  }, [React.createElement(Icon, { name: "home", size: 18 }), React.createElement('span', {}, "Dashboard")])
+                ]),
+                React.createElement('li', {}, [
+                  React.createElement('button', {
+                    onClick: () => setActiveTab('customers'),
+                    className: "w-full text-left p-3 rounded flex items-center space-x-3 " + (activeTab === 'customers' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700')
+                  }, [React.createElement(Icon, { name: "users", size: 18 }), React.createElement('span', {}, "Kunden")])
+                ]),
+                React.createElement('li', {}, [
+                  React.createElement('button', {
+                    onClick: () => setActiveTab('vehicles'),
+                    className: "w-full text-left p-3 rounded flex items-center space-x-3 " + (activeTab === 'vehicles' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700')
+                  }, [React.createElement(Icon, { name: "car", size: 18 }), React.createElement('span', {}, "Fahrzeuge")])
+                ]),
+                React.createElement('li', {}, [
+                  React.createElement('button', {
+                    onClick: () => setActiveTab('estimates'),
+                    className: "w-full text-left p-3 rounded flex items-center space-x-3 " + (activeTab === 'estimates' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700')
+                  }, [React.createElement(Icon, { name: "calculator", size: 18 }), React.createElement('span', {}, "Kostenvoranschläge")])
+                ]),
+                React.createElement('li', {}, [
+                  React.createElement('button', {
+                    onClick: () => setActiveTab('invoices'),
+                    className: "w-full text-left p-3 rounded flex items-center space-x-3 " + (activeTab === 'invoices' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700')
+                  }, [React.createElement(Icon, { name: "fileText", size: 18 }), React.createElement('span', {}, "Rechnungen")])
+                ]),
+                React.createElement('li', {}, [
+                  React.createElement('button', {
+                    onClick: () => setActiveTab('products'),
+                    className: "w-full text-left p-3 rounded flex items-center space-x-3 " + (activeTab === 'products' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700')
+                  }, [React.createElement(Icon, { name: "package", size: 18 }), React.createElement('span', {}, "Produkte")])
+                ])
+              ])
+            ])
+          ]),
+
+          // Main Content
+          React.createElement('main', { className: "flex-1 p-6" }, renderContent())
+        ]),
+
+        // Modal
+        React.createElement(Modal, { key: "modal" }, [
+          modalType === 'customer' ? React.createElement(CustomerForm) : null,
+          modalType === 'vehicle' ? React.createElement(VehicleForm) : null,
+          modalType === 'product' ? React.createElement(ProductForm) : null,
+          modalType === 'estimate' ? React.createElement(EstimateForm) : null,
+          modalType === 'invoice' ? React.createElement(InvoiceForm) : null
+        ])
+      ]);
+    };
+
+    ReactDOM.render(React.createElement(KFZKalk1000), document.getElementById('root'));
+  </script>
+</body>
+</html>
