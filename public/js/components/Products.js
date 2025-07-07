@@ -1,7 +1,7 @@
-// public/js/components/Products.js - Products Management Component
+// public/js/components/Products.js - FIXED VERSION für neues API-Format
 const { useState, useEffect } = React;
 
-// Product Modal Component
+// Product Modal Component (unverändert)
 window.ProductModal = ({ isOpen, onClose, product, onSave }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -207,7 +207,7 @@ window.ProductModal = ({ isOpen, onClose, product, onSave }) => {
   );
 };
 
-// Main Products Component
+// Main Products Component - FIXED für neues API-Format
 window.ProductsComponent = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -218,6 +218,12 @@ window.ProductsComponent = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [sortBy, setSortBy] = useState("name");
+  const [stats, setStats] = useState({
+    total: 0,
+    totalValue: 0,
+    lowStock: 0,
+    categories: 0,
+  });
 
   useEffect(() => {
     loadProducts();
@@ -230,7 +236,7 @@ window.ProductsComponent = () => {
       if (result.error) {
         apiUtils.showError("Fehler beim Laden der Produkte: " + result.error);
         // Fallback Demo-Daten
-        setProducts([
+        const demoProducts = [
           {
             id: 1,
             name: "Motoröl 5W-30",
@@ -271,13 +277,61 @@ window.ProductsComponent = () => {
             category: "Zubehör",
             description: "Scheibenwischer Set vorne",
           },
-        ]);
+        ];
+        setProducts(demoProducts);
+
+        // Demo-Statistiken berechnen
+        setStats({
+          total: demoProducts.length,
+          totalValue: demoProducts.reduce(
+            (sum, p) => sum + p.price * p.stock,
+            0
+          ),
+          lowStock: demoProducts.filter((p) => p.stock <= 5).length,
+          categories: [...new Set(demoProducts.map((p) => p.category))].length,
+        });
       } else {
-        setProducts(result.data || []);
+        // FIXED: Neues API-Format berücksichtigen
+        const responseData = result.data;
+
+        if (responseData && responseData.data) {
+          // Neues API-Format mit Statistiken
+          setProducts(responseData.data);
+          setStats(
+            responseData.stats || {
+              total: responseData.data.length,
+              totalValue: responseData.data.reduce(
+                (sum, p) => sum + p.price * p.stock,
+                0
+              ),
+              lowStock: responseData.data.filter((p) => p.stock <= 5).length,
+              categories: [...new Set(responseData.data.map((p) => p.category))]
+                .length,
+            }
+          );
+        } else if (Array.isArray(responseData)) {
+          // Fallback für altes API-Format
+          setProducts(responseData);
+          setStats({
+            total: responseData.length,
+            totalValue: responseData.reduce(
+              (sum, p) => sum + p.price * p.stock,
+              0
+            ),
+            lowStock: responseData.filter((p) => p.stock <= 5).length,
+            categories: [...new Set(responseData.map((p) => p.category))]
+              .length,
+          });
+        } else {
+          // Leeres Array als Fallback
+          setProducts([]);
+          setStats({ total: 0, totalValue: 0, lowStock: 0, categories: 0 });
+        }
       }
     } catch (error) {
       apiUtils.showError("Fehler beim Laden der Produkte");
       setProducts([]);
+      setStats({ total: 0, totalValue: 0, lowStock: 0, categories: 0 });
     } finally {
       setLoading(false);
     }
@@ -347,9 +401,14 @@ window.ProductsComponent = () => {
     }
   });
 
-  // Calculate inventory stats
-  const lowStockProducts = products.filter((p) => p.stock <= 5);
-  const totalValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
+  // Calculate current stats from filtered products or use API stats
+  const currentStats = {
+    total: stats.total || products.length,
+    totalValue:
+      stats.totalValue ||
+      products.reduce((sum, p) => sum + p.price * p.stock, 0),
+    lowStock: stats.lowStock || products.filter((p) => p.stock <= 5).length,
+  };
 
   if (loading) {
     return (
@@ -370,8 +429,8 @@ window.ProductsComponent = () => {
             Produktverwaltung
           </h2>
           <p className="text-gray-400 mt-1">
-            {products.length} Produkt{products.length !== 1 ? "e" : ""} •{" "}
-            Gesamtwert: {apiUtils.formatPrice(totalValue)}
+            {currentStats.total} Produkt{currentStats.total !== 1 ? "e" : ""} •{" "}
+            Gesamtwert: {apiUtils.formatPrice(currentStats.totalValue)}
           </p>
         </div>
 
@@ -390,7 +449,7 @@ window.ProductsComponent = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-indigo-100 text-sm">Gesamtprodukte</p>
-              <p className="text-2xl font-bold">{products.length}</p>
+              <p className="text-2xl font-bold">{currentStats.total}</p>
             </div>
             <Icon name="package" size={24} className="text-indigo-200" />
           </div>
@@ -400,7 +459,7 @@ window.ProductsComponent = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-orange-100 text-sm">Niedriger Bestand</p>
-              <p className="text-2xl font-bold">{lowStockProducts.length}</p>
+              <p className="text-2xl font-bold">{currentStats.lowStock}</p>
             </div>
             <Icon name="alertTriangle" size={24} className="text-orange-200" />
           </div>
@@ -411,7 +470,7 @@ window.ProductsComponent = () => {
             <div>
               <p className="text-green-100 text-sm">Lagerwert</p>
               <p className="text-xl font-bold">
-                {apiUtils.formatPrice(totalValue)}
+                {apiUtils.formatPrice(currentStats.totalValue)}
               </p>
             </div>
             <Icon name="dollar" size={24} className="text-green-200" />
@@ -576,7 +635,7 @@ window.ProductsComponent = () => {
       )}
 
       {/* Low Stock Warning */}
-      {lowStockProducts.length > 0 && (
+      {currentStats.lowStock > 0 && (
         <div className="bg-orange-900/20 border border-orange-600/30 rounded-lg p-4">
           <div className="flex items-center gap-3 mb-3">
             <Icon name="alertTriangle" size={20} className="text-orange-400" />
@@ -585,21 +644,24 @@ window.ProductsComponent = () => {
             </h3>
           </div>
           <p className="text-gray-300 mb-3">
-            Die folgenden Produkte haben einen niedrigen Lagerbestand (≤5
-            Stück):
+            {currentStats.lowStock} Produkt
+            {currentStats.lowStock !== 1 ? "e haben" : " hat"} einen niedrigen
+            Lagerbestand (≤5 Stück)
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {lowStockProducts.map((product) => (
-              <div
-                key={product.id}
-                className="flex justify-between items-center bg-gray-800 p-3 rounded"
-              >
-                <span className="text-white">{product.name}</span>
-                <span className="text-orange-400 font-bold">
-                  {product.stock} Stück
-                </span>
-              </div>
-            ))}
+            {products
+              .filter((p) => p.stock <= 5)
+              .map((product) => (
+                <div
+                  key={product.id}
+                  className="flex justify-between items-center bg-gray-800 p-3 rounded"
+                >
+                  <span className="text-white">{product.name}</span>
+                  <span className="text-orange-400 font-bold">
+                    {product.stock} Stück
+                  </span>
+                </div>
+              ))}
           </div>
         </div>
       )}

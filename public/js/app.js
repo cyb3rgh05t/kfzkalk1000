@@ -1,4 +1,4 @@
-// public/js/app.js - FIXED VERSION
+// public/js/app.js - FIXED VERSION mit funktionierendem Produktkatalog
 const { useState, useEffect } = React;
 
 // Main KFZKalk1000 Application
@@ -34,7 +34,7 @@ window.KFZKalk1000 = () => {
       console.log("API-Verbindung fehlgeschlagen, Demo-Modus aktiv");
     } finally {
       setLoading(false);
-      setTimeout(() => setRefreshing(false), 500); // Visual feedback delay
+      setTimeout(() => setRefreshing(false), 500);
     }
   };
 
@@ -49,17 +49,23 @@ window.KFZKalk1000 = () => {
     }
   };
 
-  // Navigation items - UPDATED: Services hinzugefügt
+  // Navigation items
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: "home", color: "blue" },
     { id: "customers", label: "Kunden", icon: "users", color: "green" },
     { id: "vehicles", label: "Fahrzeuge", icon: "car", color: "purple" },
     {
+      id: "products",
+      label: "Produktkatalog",
+      icon: "package",
+      color: "indigo",
+    }, // FIXED: Echte Products
+    {
       id: "services",
       label: "Leistungskatalog",
       icon: "wrench",
       color: "orange",
-    }, // NEU
+    },
     {
       id: "estimates",
       label: "Kostenvoranschläge",
@@ -67,10 +73,9 @@ window.KFZKalk1000 = () => {
       color: "yellow",
     },
     { id: "invoices", label: "Rechnungen", icon: "fileText", color: "red" },
-    { id: "products", label: "Produkte", icon: "package", color: "indigo" },
   ];
 
-  // Render content based on active tab - FIXED: Echte Components
+  // Render content based on active tab - FIXED: Echte Components verwenden
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -80,15 +85,15 @@ window.KFZKalk1000 = () => {
       case "customers":
         return <CustomersComponent />;
       case "vehicles":
-        return <VehiclesComponent />; // FIXED: Echte Component statt Placeholder
-      case "services":
-        return <ServicesComponent />; // NEU: Leistungskatalog
-      case "estimates":
-        return <EstimatesComponent />;
-      case "invoices":
-        return <InvoicesComponent />;
+        return <VehiclesComponent />;
       case "products":
-        return <ProductsComponent />;
+        return <ProductsComponent />; // FIXED: Echte ProductsComponent verwenden
+      case "services":
+        return <ServicesComponent />;
+      case "estimates":
+        return <EstimatesPlaceholder />;
+      case "invoices":
+        return <InvoicesPlaceholder />;
       default:
         return (
           <div className="text-center py-12">
@@ -122,7 +127,7 @@ window.KFZKalk1000 = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header - SIMPLIFIED: System Status moved to Sidebar */}
+      {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
@@ -164,7 +169,7 @@ window.KFZKalk1000 = () => {
       </header>
 
       <div className="flex">
-        {/* Sidebar - UPDATED: System Status hinzugefügt */}
+        {/* Sidebar */}
         <aside className="w-64 bg-gray-800 border-r border-gray-700 min-h-screen sticky top-16">
           <nav className="p-4">
             {/* Navigation Menu */}
@@ -281,7 +286,7 @@ window.KFZKalk1000 = () => {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                    <span className="text-xs text-gray-300">Frontend OK</span>
+                    <span className="text-xs text-gray-300">Frontend</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div
@@ -290,7 +295,7 @@ window.KFZKalk1000 = () => {
                       }`}
                     />
                     <span className="text-xs text-gray-300">
-                      Backend {apiConnected ? "OK" : "Demo"}
+                      Backend {apiConnected ? "" : "Demo"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -300,7 +305,7 @@ window.KFZKalk1000 = () => {
                       }`}
                     />
                     <span className="text-xs text-gray-300">
-                      Database {apiConnected ? "OK" : "Mock"}
+                      Database {apiConnected ? "" : "Mock"}
                     </span>
                   </div>
                 </div>
@@ -338,8 +343,8 @@ window.KFZKalk1000 = () => {
   );
 };
 
-// Placeholder components entfernen - nur die echten Components bleiben
-window.EstimatesComponent = () => (
+// Placeholder components für noch nicht implementierte Bereiche
+window.EstimatesPlaceholder = () => (
   <div className="text-center py-12">
     <Icon name="calculator" size={48} className="text-gray-600 mx-auto mb-4" />
     <h3 className="text-lg font-medium text-gray-400 mb-2">
@@ -349,21 +354,11 @@ window.EstimatesComponent = () => (
   </div>
 );
 
-window.InvoicesComponent = () => (
+window.InvoicesPlaceholder = () => (
   <div className="text-center py-12">
     <Icon name="fileText" size={48} className="text-gray-600 mx-auto mb-4" />
     <h3 className="text-lg font-medium text-gray-400 mb-2">
       Rechnungsverwaltung
-    </h3>
-    <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
-  </div>
-);
-
-window.ProductsComponent = () => (
-  <div className="text-center py-12">
-    <Icon name="package" size={48} className="text-gray-600 mx-auto mb-4" />
-    <h3 className="text-lg font-medium text-gray-400 mb-2">
-      Produktverwaltung
     </h3>
     <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
   </div>
