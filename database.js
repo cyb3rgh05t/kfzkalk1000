@@ -1,4 +1,4 @@
-// database.js - UPDATED VERSION mit services Tabelle
+// database.js - UPDATED VERSION mit Fahrzeugpreisen
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
@@ -35,7 +35,7 @@ function createTables(db) {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
 
-      // Fahrzeuge Tabelle
+      // Fahrzeuge Tabelle - ERWEITERT um Preise
       `CREATE TABLE IF NOT EXISTS vehicles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer_id INTEGER,
@@ -45,6 +45,12 @@ function createTables(db) {
         license_plate TEXT,
         vin TEXT,
         mileage INTEGER,
+        purchase_price DECIMAL(10,2) DEFAULT 0,
+        sale_price DECIMAL(10,2) DEFAULT 0,
+        purchase_date DATE,
+        sale_date DATE,
+        status TEXT DEFAULT 'inventory',
+        notes TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES customers (id)
@@ -62,7 +68,7 @@ function createTables(db) {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
 
-      // NEU: Leistungskatalog Tabelle
+      // Leistungskatalog Tabelle
       `CREATE TABLE IF NOT EXISTS services (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -148,7 +154,8 @@ function createTables(db) {
     function createNextTable() {
       if (tableIndex >= tables.length) {
         console.log("✅ Alle Tabellen erfolgreich erstellt");
-        resolve();
+        // Nach Tabellenerstellung: Schema-Updates für bestehende Datenbanken
+        updateExistingSchema(db, resolve, reject);
         return;
       }
 
@@ -171,6 +178,85 @@ function createTables(db) {
   });
 }
 
+// Schema-Updates für bestehende Datenbanken
+function updateExistingSchema(db, resolve, reject) {
+  console.log("🔄 Prüfe Schema-Updates...");
+
+  // Prüfe ob neue Spalten bereits existieren
+  db.all("PRAGMA table_info(vehicles)", (err, columns) => {
+    if (err) {
+      console.error("❌ Fehler beim Prüfen der Tabellen-Info:", err);
+      reject(err);
+      return;
+    }
+
+    const columnNames = columns.map((col) => col.name);
+    const newColumns = [
+      {
+        name: "purchase_price",
+        sql: "ALTER TABLE vehicles ADD COLUMN purchase_price DECIMAL(10,2) DEFAULT 0",
+      },
+      {
+        name: "sale_price",
+        sql: "ALTER TABLE vehicles ADD COLUMN sale_price DECIMAL(10,2) DEFAULT 0",
+      },
+      {
+        name: "purchase_date",
+        sql: "ALTER TABLE vehicles ADD COLUMN purchase_date DATE",
+      },
+      {
+        name: "sale_date",
+        sql: "ALTER TABLE vehicles ADD COLUMN sale_date DATE",
+      },
+      {
+        name: "status",
+        sql: 'ALTER TABLE vehicles ADD COLUMN status TEXT DEFAULT "inventory"',
+      },
+      { name: "notes", sql: "ALTER TABLE vehicles ADD COLUMN notes TEXT" },
+    ];
+
+    let updatesNeeded = [];
+    newColumns.forEach((col) => {
+      if (!columnNames.includes(col.name)) {
+        updatesNeeded.push(col);
+      }
+    });
+
+    if (updatesNeeded.length === 0) {
+      console.log("✅ Schema ist bereits aktuell");
+      resolve();
+      return;
+    }
+
+    console.log(`🔧 Führe ${updatesNeeded.length} Schema-Updates durch...`);
+
+    // Updates sequenziell ausführen
+    let updateIndex = 0;
+    function executeNextUpdate() {
+      if (updateIndex >= updatesNeeded.length) {
+        console.log("✅ Schema-Updates abgeschlossen");
+        resolve();
+        return;
+      }
+
+      const update = updatesNeeded[updateIndex];
+      db.run(update.sql, (err) => {
+        if (err) {
+          console.error(`❌ Fehler beim Update von ${update.name}:`, err);
+          reject(err);
+          return;
+        }
+
+        console.log(`✅ Spalte ${update.name} hinzugefügt`);
+        updateIndex++;
+        executeNextUpdate();
+      });
+    }
+
+    executeNextUpdate();
+  });
+}
+
 // Beispieldaten einfügen
 function insertSampleData(db) {
   return new Promise((resolve, reject) => {
@@ -184,7 +270,7 @@ function insertSampleData(db) {
       db.run("DELETE FROM invoices");
       db.run("DELETE FROM vehicles");
       db.run("DELETE FROM products");
-      db.run("DELETE FROM services"); // NEU
+      db.run("DELETE FROM services");
       db.run("DELETE FROM customers");
 
       // Beispiel Kunden
@@ -272,7 +358,7 @@ function insertSampleData(db) {
         );
       });
 
-      // NEU: Beispiel Services (Leistungskatalog)
+      // Services (Leistungskatalog)
       const services = [
         [
           "Ölwechsel",
@@ -384,15 +470,88 @@ function insertSampleData(db) {
       // Warten auf Kunden-Inserts, dann Fahrzeuge einfügen
       setTimeout(() => {
         console.log("🚗 Füge Fahrzeuge ein...");
+        // ERWEITERT: Fahrzeuge mit Preisen
         const vehicles = [
-          [1, "BMW", "320i", 2020, "AB-CD 123", "WBAA12345678901234", 45000],
-          [2, "Mercedes", "C200", 2019, "XY-Z 789", "WDD12345678901234", 38000],
-          [3, "VW", "Golf", 2021, "MN-OP 456", "WVWZZZ1JZ1W123456", 25000],
+          [
+            1,
+            "BMW",
+            "320i",
+            2020,
+            "AB-CD 123",
+            "WBAA12345678901234",
+            45000,
+            28500.0,
+            32000.0,
+            "2024-01-15",
+            null,
+            "inventory",
+            "Sehr guter Zustand, alle Services gemacht",
+          ],
+          [
+            2,
+            "Mercedes",
+            "C200",
+            2019,
+            "XY-Z 789",
+            "WDD12345678901234",
+            38000,
+            22000.0,
+            26500.0,
+            "2024-02-20",
+            null,
+            "inventory",
+            "1 Vorbesitzer, Scheckheftgepflegt",
+          ],
+          [
+            3,
+            "VW",
+            "Golf",
+            2021,
+            "MN-OP 456",
+            "WVWZZZ1JZ1W123456",
+            25000,
+            18500.0,
+            22000.0,
+            "2024-03-10",
+            null,
+            "inventory",
+            "Neuwagen-Qualität",
+          ],
+          [
+            1,
+            "Audi",
+            "A4",
+            2018,
+            "QR-ST 789",
+            "WAUZZZF4XJA123456",
+            68000,
+            19500.0,
+            24000.0,
+            "2024-01-05",
+            "2024-06-15",
+            "sold",
+            "Verkauft an Stammkunden",
+          ],
+          [
+            2,
+            "Ford",
+            "Focus",
+            2017,
+            "UV-WX 123",
+            "WF0XXXTTGXHK123456",
+            82000,
+            12000.0,
+            15500.0,
+            "2023-12-20",
+            null,
+            "inventory",
+            "Kleinere Gebrauchsspuren",
+          ],
         ];
 
         vehicles.forEach((vehicle) => {
           db.run(
-            "INSERT INTO vehicles (customer_id, brand, model, year, license_plate, vin, mileage) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO vehicles (customer_id, brand, model, year, license_plate, vin, mileage, purchase_price, sale_price, purchase_date, sale_date, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             vehicle,
             function (err) {
               if (err) {
