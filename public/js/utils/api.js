@@ -1,4 +1,4 @@
-// public/js/utils/api.js - API Helper Functions
+// public/js/utils/api.js - UPDATED VERSION mit Services
 window.api = {
   // Base API request function
   request: async (endpoint, options = {}) => {
@@ -47,6 +47,14 @@ window.api = {
     });
   },
 
+  // PATCH request
+  patch: async (endpoint, data = {}) => {
+    return api.request(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
   // DELETE request
   delete: async (endpoint) => {
     return api.request(endpoint, { method: "DELETE" });
@@ -72,6 +80,18 @@ window.api = {
     create: (data) => api.post("/products", data),
     update: (id, data) => api.put(`/products/${id}`, data),
     delete: (id) => api.delete(`/products/${id}`),
+  },
+
+  // NEU: Services API
+  services: {
+    getAll: () => api.get("/services"),
+    getCategories: () => api.get("/services/categories"),
+    getByCategory: (category) =>
+      api.get(`/services/category/${encodeURIComponent(category)}`),
+    create: (data) => api.post("/services", data),
+    update: (id, data) => api.put(`/services/${id}`, data),
+    delete: (id) => api.delete(`/services/${id}`),
+    activate: (id) => api.patch(`/services/${id}/activate`),
   },
 
   invoices: {
@@ -146,6 +166,21 @@ window.apiUtils = {
     return new Date(dateString).toLocaleDateString("de-DE");
   },
 
+  // Formatiert Zeitangaben
+  formatDuration: (minutes) => {
+    if (!minutes) return "";
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    if (hours === 0) {
+      return `${mins} Min.`;
+    } else if (mins === 0) {
+      return `${hours} Std.`;
+    } else {
+      return `${hours} Std. ${mins} Min.`;
+    }
+  },
+
   // Validiert Email-Adressen
   validateEmail: (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -164,5 +199,22 @@ window.apiUtils = {
     const year = new Date().getFullYear();
     const timestamp = Date.now().toString().slice(-6);
     return `KV-${year}-${timestamp}`;
+  },
+
+  // Berechnet Gesamtpreis für Services
+  calculateServiceTotal: (services) => {
+    return services.reduce((total, service) => {
+      return (
+        total +
+        (parseFloat(service.price) || 0) * (parseInt(service.quantity) || 1)
+      );
+    }, 0);
+  },
+
+  // Formatiert Servicepreis mit Arbeitszeit
+  formatServicePrice: (service) => {
+    const price = apiUtils.formatPrice(service.price);
+    const duration = apiUtils.formatDuration(service.duration_minutes);
+    return `${price} (${duration})`;
   },
 };

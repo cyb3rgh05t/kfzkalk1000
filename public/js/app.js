@@ -1,4 +1,4 @@
-// public/js/app.js - Main Application (Enhanced)
+// public/js/app.js - FIXED VERSION
 const { useState, useEffect } = React;
 
 // Main KFZKalk1000 Application
@@ -7,12 +7,19 @@ window.KFZKalk1000 = () => {
   const [apiConnected, setApiConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Initialize start time for uptime calculation
+  if (!window.startTime) {
+    window.startTime = Date.now();
+  }
 
   useEffect(() => {
     checkApiConnection();
   }, []);
 
   const checkApiConnection = async () => {
+    setRefreshing(true);
     try {
       const result = await api.health.check();
       if (result.error) {
@@ -27,6 +34,7 @@ window.KFZKalk1000 = () => {
       console.log("API-Verbindung fehlgeschlagen, Demo-Modus aktiv");
     } finally {
       setLoading(false);
+      setTimeout(() => setRefreshing(false), 500); // Visual feedback delay
     }
   };
 
@@ -41,11 +49,17 @@ window.KFZKalk1000 = () => {
     }
   };
 
-  // Navigation items
+  // Navigation items - UPDATED: Services hinzugefügt
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: "home", color: "blue" },
     { id: "customers", label: "Kunden", icon: "users", color: "green" },
     { id: "vehicles", label: "Fahrzeuge", icon: "car", color: "purple" },
+    {
+      id: "services",
+      label: "Leistungskatalog",
+      icon: "wrench",
+      color: "orange",
+    }, // NEU
     {
       id: "estimates",
       label: "Kostenvoranschläge",
@@ -56,7 +70,7 @@ window.KFZKalk1000 = () => {
     { id: "products", label: "Produkte", icon: "package", color: "indigo" },
   ];
 
-  // Render content based on active tab
+  // Render content based on active tab - FIXED: Echte Components
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
@@ -66,7 +80,9 @@ window.KFZKalk1000 = () => {
       case "customers":
         return <CustomersComponent />;
       case "vehicles":
-        return <VehiclesComponent />;
+        return <VehiclesComponent />; // FIXED: Echte Component statt Placeholder
+      case "services":
+        return <ServicesComponent />; // NEU: Leistungskatalog
       case "estimates":
         return <EstimatesComponent />;
       case "invoices":
@@ -106,7 +122,7 @@ window.KFZKalk1000 = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
+      {/* Header - SIMPLIFIED: System Status moved to Sidebar */}
       <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
@@ -115,7 +131,7 @@ window.KFZKalk1000 = () => {
                 <Icon name="wrench" size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">KFZKalk1000</h1>
+                <h1 className="text-2xl font-bold text-white">KFZKalkPRO</h1>
                 <p className="text-gray-400 text-sm">
                   Professionelle KFZ-Rechnungssoftware
                 </p>
@@ -123,29 +139,6 @@ window.KFZKalk1000 = () => {
             </div>
 
             <div className="flex items-center space-x-6">
-              {/* Connection Status */}
-              <div
-                className={`flex items-center space-x-2 text-sm ${
-                  apiConnected ? "text-green-400" : "text-orange-400"
-                }`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    apiConnected ? "bg-green-400" : "bg-orange-400"
-                  }`}
-                />
-                <span>{apiConnected ? "API Verbunden" : "Demo Modus"}</span>
-              </div>
-
-              {/* Refresh Button */}
-              <button
-                onClick={() => window.location.reload()}
-                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                title="Seite neu laden"
-              >
-                <Icon name="refresh" size={16} />
-              </button>
-
               {/* User Info */}
               <div className="text-right">
                 <p className="text-sm text-white font-medium">
@@ -153,16 +146,29 @@ window.KFZKalk1000 = () => {
                 </p>
                 <p className="text-xs text-gray-400">Eingeloggt als Admin</p>
               </div>
+
+              {/* Quick Status Indicator */}
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    apiConnected ? "bg-green-400" : "bg-orange-400"
+                  } animate-pulse`}
+                />
+                <span className="text-xs text-gray-400">
+                  {apiConnected ? "Live" : "Demo"}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
+        {/* Sidebar - UPDATED: System Status hinzugefügt */}
         <aside className="w-64 bg-gray-800 border-r border-gray-700 min-h-screen sticky top-16">
           <nav className="p-4">
-            <ul className="space-y-2">
+            {/* Navigation Menu */}
+            <ul className="space-y-2 mb-6">
               {navigationItems.map((item) => {
                 const isActive = activeTab === item.id;
                 const colorClasses = {
@@ -175,6 +181,9 @@ window.KFZKalk1000 = () => {
                   purple: isActive
                     ? "bg-purple-600 text-white"
                     : "text-gray-300 hover:bg-purple-600/20 hover:text-purple-300",
+                  orange: isActive
+                    ? "bg-orange-600 text-white"
+                    : "text-gray-300 hover:bg-orange-600/20 hover:text-orange-300",
                   yellow: isActive
                     ? "bg-yellow-600 text-white"
                     : "text-gray-300 hover:bg-yellow-600/20 hover:text-yellow-300",
@@ -202,36 +211,119 @@ window.KFZKalk1000 = () => {
               })}
             </ul>
 
-            {/* Connection Status in Sidebar */}
-            <div className="mt-8 p-3 bg-gray-700 rounded-lg">
-              <h4 className="text-sm font-medium text-white mb-2">
+            {/* System Status Section */}
+            <div className="border-t border-gray-700 pt-4">
+              <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">
                 System Status
-              </h4>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">API:</span>
-                  <span
-                    className={
-                      apiConnected ? "text-green-400" : "text-orange-400"
-                    }
-                  >
-                    {apiConnected ? "Verbunden" : "Demo"}
-                  </span>
+              </h3>
+
+              {/* API Connection Status */}
+              <div className="bg-gray-700 rounded-lg p-3 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-gray-400">API Verbindung</span>
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      apiConnected ? "bg-green-400" : "bg-orange-400"
+                    }`}
+                  />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">DB:</span>
-                  <span
-                    className={
-                      apiConnected ? "text-green-400" : "text-orange-400"
-                    }
-                  >
-                    {apiConnected ? "SQLite" : "Demo"}
-                  </span>
+                <div
+                  className={`text-sm font-medium ${
+                    apiConnected ? "text-green-400" : "text-orange-400"
+                  }`}
+                >
+                  {apiConnected ? "Verbunden" : "Demo Modus"}
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Version:</span>
-                  <span className="text-blue-400">v1.0.0</span>
+                {!apiConnected && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    Läuft mit Beispieldaten
+                  </div>
+                )}
+              </div>
+
+              {/* System Info */}
+              <div className="bg-gray-700 rounded-lg p-3 mb-3">
+                <div className="text-xs text-gray-400 mb-2">System Info</div>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Version:</span>
+                    <span className="text-gray-300">v1.0.0</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Uptime:</span>
+                    <span className="text-gray-300">
+                      {(() => {
+                        const uptime =
+                          Date.now() - (window.startTime || Date.now());
+                        const minutes = Math.floor(uptime / 60000);
+                        return minutes < 60
+                          ? `${minutes}m`
+                          : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+                      })()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Modus:</span>
+                    <span
+                      className={`font-medium ${
+                        apiConnected ? "text-blue-400" : "text-orange-400"
+                      }`}
+                    >
+                      {apiConnected ? "Production" : "Demo"}
+                    </span>
+                  </div>
                 </div>
+              </div>
+
+              {/* Quick Health Check */}
+              <div className="bg-gray-700 rounded-lg p-3">
+                <div className="text-xs text-gray-400 mb-2">Health Check</div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <span className="text-xs text-gray-300">Frontend OK</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        apiConnected ? "bg-green-400" : "bg-orange-400"
+                      }`}
+                    />
+                    <span className="text-xs text-gray-300">
+                      Backend {apiConnected ? "OK" : "Demo"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        apiConnected ? "bg-green-400" : "bg-orange-400"
+                      }`}
+                    />
+                    <span className="text-xs text-gray-300">
+                      Database {apiConnected ? "OK" : "Mock"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Refresh Button */}
+                <button
+                  onClick={checkApiConnection}
+                  disabled={refreshing}
+                  className="w-full mt-2 text-xs bg-gray-600 hover:bg-gray-500 disabled:opacity-50 text-gray-300 py-1 px-2 rounded transition-colors flex items-center justify-center gap-1"
+                  title="System Status aktualisieren"
+                >
+                  {refreshing ? (
+                    <>
+                      <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      <span>Prüfe...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="refresh" size={12} />
+                      <span>Aktualisieren</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </nav>
@@ -246,275 +338,7 @@ window.KFZKalk1000 = () => {
   );
 };
 
-// Enhanced Dashboard Component
-window.DashboardComponent = ({ data, onNavigate }) => {
-  const stats = data || {
-    customerCount: 0,
-    vehicleCount: 0,
-    totalRevenue: 0,
-    pendingInvoices: 0,
-    totalEstimates: 0,
-    pendingEstimates: 0,
-  };
-
-  const quickActions = [
-    {
-      label: "Neuer Kunde",
-      icon: "users",
-      action: () => onNavigate("customers"),
-      color: "green",
-      description: "Kundenstamm erweitern",
-    },
-    {
-      label: "Fahrzeug hinzufügen",
-      icon: "car",
-      action: () => onNavigate("vehicles"),
-      color: "purple",
-      description: "Fahrzeugpark verwalten",
-    },
-    {
-      label: "Neue Rechnung",
-      icon: "fileText",
-      action: () => onNavigate("invoices"),
-      color: "red",
-      description: "Rechnung erstellen",
-    },
-    {
-      label: "Kostenvoranschlag",
-      icon: "calculator",
-      action: () => onNavigate("estimates"),
-      color: "yellow",
-      description: "Angebot kalkulieren",
-    },
-    {
-      label: "Produkt hinzufügen",
-      icon: "package",
-      action: () => onNavigate("products"),
-      color: "indigo",
-      description: "Lager verwalten",
-    },
-    {
-      label: "Wartung planen",
-      icon: "wrench",
-      action: () => alert("Wartungsplaner - in Entwicklung"),
-      color: "blue",
-      description: "Service organisieren",
-    },
-  ];
-
-  const recentActivities = [
-    {
-      icon: "users",
-      text: "Neuer Kunde: Max Mustermann hinzugefügt",
-      time: "vor 2 Stunden",
-      color: "green",
-    },
-    {
-      icon: "car",
-      text: "Fahrzeug: BMW 320i (AB-CD 123) bearbeitet",
-      time: "vor 4 Stunden",
-      color: "purple",
-    },
-    {
-      icon: "fileText",
-      text: "Rechnung RE-2025-001 erstellt",
-      time: "vor 6 Stunden",
-      color: "red",
-    },
-    {
-      icon: "calculator",
-      text: "Kostenvoranschlag KV-2025-003 gesendet",
-      time: "gestern",
-      color: "yellow",
-    },
-  ];
-
-  return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-          <Icon name="home" size={32} className="text-blue-400" />
-          Dashboard
-        </h2>
-        <p className="text-gray-400">
-          Willkommen zurück! Hier ist ein Überblick über Ihre Werkstatt.
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm">Gesamtumsatz</p>
-              <p className="text-2xl font-bold">
-                {apiUtils.formatPrice(stats.totalRevenue)}
-              </p>
-              <p className="text-blue-200 text-xs mt-1">+12.5% diesen Monat</p>
-            </div>
-            <Icon name="dollar" size={32} className="text-blue-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-green-600 to-green-800 p-6 rounded-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-100 text-sm">Kunden</p>
-              <p className="text-2xl font-bold">{stats.customerCount}</p>
-              <p className="text-green-200 text-xs mt-1">+3 diese Woche</p>
-            </div>
-            <Icon name="users" size={32} className="text-green-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-purple-100 text-sm">Fahrzeuge</p>
-              <p className="text-2xl font-bold">{stats.vehicleCount}</p>
-              <p className="text-purple-200 text-xs mt-1">
-                {stats.vehicleCount} registriert
-              </p>
-            </div>
-            <Icon name="car" size={32} className="text-purple-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-red-600 to-red-800 p-6 rounded-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-red-100 text-sm">Offene Rechnungen</p>
-              <p className="text-2xl font-bold">{stats.pendingInvoices}</p>
-              <p className="text-red-200 text-xs mt-1">
-                Benötigen Aufmerksamkeit
-              </p>
-            </div>
-            <Icon name="fileText" size={32} className="text-red-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-yellow-600 to-yellow-800 p-6 rounded-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-yellow-100 text-sm">Kostenvoranschläge</p>
-              <p className="text-2xl font-bold">{stats.totalEstimates}</p>
-              <p className="text-yellow-200 text-xs mt-1">
-                {stats.pendingEstimates} ausstehend
-              </p>
-            </div>
-            <Icon name="calculator" size={32} className="text-yellow-200" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 p-6 rounded-lg text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-indigo-100 text-sm">Lagerbestand</p>
-              <p className="text-2xl font-bold">156</p>
-              <p className="text-indigo-200 text-xs mt-1">Produkte verfügbar</p>
-            </div>
-            <Icon name="package" size={32} className="text-indigo-200" />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Quick Actions */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Icon name="star" size={20} className="text-yellow-400" />
-            Schnellzugriff
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {quickActions.map((action, index) => (
-              <button
-                key={index}
-                onClick={action.action}
-                className={`p-4 rounded-lg bg-${action.color}-600 hover:bg-${action.color}-700 text-white transition-colors text-left group`}
-              >
-                <div className="flex items-start gap-3">
-                  <Icon name={action.icon} size={20} className="mt-0.5" />
-                  <div>
-                    <div className="font-medium">{action.label}</div>
-                    <div className="text-xs opacity-80 mt-1">
-                      {action.description}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activities */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Icon name="clock" size={20} className="text-blue-400" />
-            Letzte Aktivitäten
-          </h3>
-          <div className="space-y-4">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full bg-${activity.color}-600 flex items-center justify-center flex-shrink-0`}
-                >
-                  <Icon name={activity.icon} size={14} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm">{activity.text}</p>
-                  <p className="text-gray-400 text-xs">{activity.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="w-full mt-4 text-blue-400 hover:text-blue-300 text-sm transition-colors">
-            Alle Aktivitäten anzeigen →
-          </button>
-        </div>
-      </div>
-
-      {/* System Health */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Icon name="shield" size={20} className="text-green-400" />
-          System Status
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Icon name="check" size={20} className="text-white" />
-            </div>
-            <p className="text-white font-medium">Datenbank</p>
-            <p className="text-green-400 text-sm">Online</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Icon name="check" size={20} className="text-white" />
-            </div>
-            <p className="text-white font-medium">API Server</p>
-            <p className="text-green-400 text-sm">Läuft</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Icon name="check" size={20} className="text-white" />
-            </div>
-            <p className="text-white font-medium">Backup</p>
-            <p className="text-green-400 text-sm">Aktuell</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Icon name="info" size={20} className="text-white" />
-            </div>
-            <p className="text-white font-medium">Version</p>
-            <p className="text-blue-400 text-sm">v1.0.0</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Placeholder components für andere Bereiche (werden später implementiert)
+// Placeholder components entfernen - nur die echten Components bleiben
 window.EstimatesComponent = () => (
   <div className="text-center py-12">
     <Icon name="calculator" size={48} className="text-gray-600 mx-auto mb-4" />
@@ -522,12 +346,6 @@ window.EstimatesComponent = () => (
       Kostenvoranschläge
     </h3>
     <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
-    <button
-      onClick={() => alert("Feature in Entwicklung")}
-      className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg"
-    >
-      Interessiert? Feedback geben
-    </button>
   </div>
 );
 
@@ -538,12 +356,16 @@ window.InvoicesComponent = () => (
       Rechnungsverwaltung
     </h3>
     <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
-    <button
-      onClick={() => alert("Feature in Entwicklung")}
-      className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-    >
-      Interessiert? Feedback geben
-    </button>
+  </div>
+);
+
+window.ProductsComponent = () => (
+  <div className="text-center py-12">
+    <Icon name="package" size={48} className="text-gray-600 mx-auto mb-4" />
+    <h3 className="text-lg font-medium text-gray-400 mb-2">
+      Produktverwaltung
+    </h3>
+    <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
   </div>
 );
 

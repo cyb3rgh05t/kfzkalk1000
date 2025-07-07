@@ -1,3 +1,4 @@
+// database.js - UPDATED VERSION mit services Tabelle
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
@@ -61,6 +62,20 @@ function createTables(db) {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
 
+      // NEU: Leistungskatalog Tabelle
+      `CREATE TABLE IF NOT EXISTS services (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        category TEXT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        duration_minutes INTEGER DEFAULT 60,
+        labor_rate DECIMAL(10,2) DEFAULT 0,
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+
       // Rechnungen Tabelle
       `CREATE TABLE IF NOT EXISTS invoices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,11 +97,14 @@ function createTables(db) {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         invoice_id INTEGER,
         product_id INTEGER,
+        service_id INTEGER,
         quantity INTEGER,
         unit_price DECIMAL(10,2),
         total_price DECIMAL(10,2),
+        item_type TEXT DEFAULT 'product',
         FOREIGN KEY (invoice_id) REFERENCES invoices (id),
-        FOREIGN KEY (product_id) REFERENCES products (id)
+        FOREIGN KEY (product_id) REFERENCES products (id),
+        FOREIGN KEY (service_id) REFERENCES services (id)
       )`,
 
       // Kostenvoranschläge Tabelle
@@ -112,12 +130,15 @@ function createTables(db) {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         estimate_id INTEGER,
         product_id INTEGER,
+        service_id INTEGER,
         description TEXT,
         quantity INTEGER,
         unit_price DECIMAL(10,2),
         total_price DECIMAL(10,2),
+        item_type TEXT DEFAULT 'product',
         FOREIGN KEY (estimate_id) REFERENCES estimates (id),
-        FOREIGN KEY (product_id) REFERENCES products (id)
+        FOREIGN KEY (product_id) REFERENCES products (id),
+        FOREIGN KEY (service_id) REFERENCES services (id)
       )`,
     ];
 
@@ -163,6 +184,7 @@ function insertSampleData(db) {
       db.run("DELETE FROM invoices");
       db.run("DELETE FROM vehicles");
       db.run("DELETE FROM products");
+      db.run("DELETE FROM services"); // NEU
       db.run("DELETE FROM customers");
 
       // Beispiel Kunden
@@ -188,7 +210,7 @@ function insertSampleData(db) {
       ];
 
       console.log("📥 Füge Kunden ein...");
-      customers.forEach((customer, index) => {
+      customers.forEach((customer) => {
         db.run(
           "INSERT INTO customers (name, email, phone, address) VALUES (?, ?, ?, ?)",
           customer,
@@ -245,6 +267,115 @@ function insertSampleData(db) {
               console.error("❌ Fehler beim Einfügen von Produkt:", err);
             } else {
               console.log("✅ Produkt eingefügt:", product[0]);
+            }
+          }
+        );
+      });
+
+      // NEU: Beispiel Services (Leistungskatalog)
+      const services = [
+        [
+          "Ölwechsel",
+          "Kompletter Ölwechsel mit Filter",
+          "Wartung",
+          89.0,
+          45,
+          85.0,
+          1,
+        ],
+        [
+          "Inspektion klein",
+          "Kleine Inspektion nach Herstellervorgabe",
+          "Wartung",
+          149.0,
+          90,
+          85.0,
+          1,
+        ],
+        [
+          "Inspektion groß",
+          "Große Inspektion nach Herstellervorgabe",
+          "Wartung",
+          299.0,
+          180,
+          85.0,
+          1,
+        ],
+        [
+          "Bremsenservice",
+          "Überprüfung und Wartung der Bremsanlage",
+          "Bremsen",
+          125.0,
+          75,
+          85.0,
+          1,
+        ],
+        [
+          "Reifenwechsel",
+          "Reifen wechseln und auswuchten",
+          "Reifen",
+          45.0,
+          30,
+          85.0,
+          1,
+        ],
+        [
+          "TÜV Vorbereitung",
+          "Fahrzeug für TÜV vorbereiten",
+          "Prüfungen",
+          79.0,
+          60,
+          85.0,
+          1,
+        ],
+        [
+          "Klimaservice",
+          "Klimaanlage warten und befüllen",
+          "Klima",
+          89.0,
+          45,
+          85.0,
+          1,
+        ],
+        [
+          "Motordiagnose",
+          "Computergestützte Motordiagnose",
+          "Diagnose",
+          65.0,
+          30,
+          85.0,
+          1,
+        ],
+        [
+          "Zahnriemenwechsel",
+          "Zahnriemen und Spanner erneuern",
+          "Motor",
+          450.0,
+          240,
+          85.0,
+          1,
+        ],
+        [
+          "Kupplungsreparatur",
+          "Kupplung überholen oder erneuern",
+          "Antrieb",
+          850.0,
+          360,
+          85.0,
+          1,
+        ],
+      ];
+
+      console.log("🔧 Füge Leistungen ein...");
+      services.forEach((service) => {
+        db.run(
+          "INSERT INTO services (name, description, category, price, duration_minutes, labor_rate, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          service,
+          function (err) {
+            if (err) {
+              console.error("❌ Fehler beim Einfügen von Leistung:", err);
+            } else {
+              console.log("✅ Leistung eingefügt:", service[0]);
             }
           }
         );
