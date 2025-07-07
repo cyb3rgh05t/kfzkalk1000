@@ -20,6 +20,229 @@ function initDatabase() {
   });
 }
 
+async function createSettingsTable(db) {
+  return new Promise((resolve, reject) => {
+    console.log("🔧 Erstelle Settings Tabelle...");
+
+    const settingsTableQuery = `
+      CREATE TABLE IF NOT EXISTS settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        category TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        type TEXT DEFAULT 'string',
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(category, key)
+      )`;
+
+    db.run(settingsTableQuery, (err) => {
+      if (err) {
+        console.error("❌ Fehler beim Erstellen der Settings Tabelle:", err);
+        reject(err);
+        return;
+      }
+      console.log("✅ Settings Tabelle erstellt");
+      resolve();
+    });
+  });
+}
+
+async function insertDefaultSettings(db) {
+  return new Promise((resolve, reject) => {
+    console.log("📋 Füge Standard-Einstellungen ein...");
+
+    const defaultSettings = [
+      // Firmendaten
+      ["company", "name", "Mustermann KFZ-Werkstatt", "string", "Firmenname"],
+      [
+        "company",
+        "address_street",
+        "Musterstraße 123",
+        "string",
+        "Straße und Hausnummer",
+      ],
+      ["company", "address_city", "12345 Musterstadt", "string", "PLZ und Ort"],
+      ["company", "phone", "+49 123 456789", "string", "Telefonnummer"],
+      ["company", "email", "info@mustermann-kfz.de", "email", "E-Mail-Adresse"],
+      ["company", "website", "www.mustermann-kfz.de", "url", "Website"],
+      ["company", "tax_number", "DE123456789", "string", "Steuernummer"],
+      ["company", "vat_id", "DE123456789", "string", "USt-IdNr."],
+      ["company", "iban", "DE89 1234 5678 9012 3456 78", "string", "IBAN"],
+      ["company", "bic", "DEUTDEFF", "string", "BIC"],
+      ["company", "bank_name", "Deutsche Bank", "string", "Bank"],
+      ["company", "logo_url", "/assets/logo.png", "string", "Logo Pfad"],
+
+      // Rechnungseinstellungen
+      ["invoice", "number_prefix", "RE", "string", "Rechnungsnummer Präfix"],
+      [
+        "invoice",
+        "payment_terms",
+        "14 Tage netto",
+        "string",
+        "Zahlungsbedingungen",
+      ],
+      ["invoice", "late_fee", "5.00", "number", "Mahngebühr in EUR"],
+      ["invoice", "vat_rate", "19", "number", "Mehrwertsteuersatz in %"],
+      ["invoice", "default_currency", "EUR", "string", "Standardwährung"],
+      ["invoice", "language", "de", "string", "Sprache (de/en)"],
+
+      // Kostenvoranschlag-Einstellungen
+      ["estimate", "number_prefix", "KV", "string", "KV-Nummer Präfix"],
+      ["estimate", "validity_days", "30", "number", "Gültigkeit in Tagen"],
+      [
+        "estimate",
+        "auto_convert",
+        "false",
+        "boolean",
+        "Auto-Umwandlung in Rechnung",
+      ],
+      ["estimate", "include_labor", "true", "boolean", "Arbeitszeit anzeigen"],
+
+      // System-Einstellungen
+      ["system", "backup_enabled", "true", "boolean", "Automatische Backups"],
+      [
+        "system",
+        "notification_email",
+        "admin@mustermann-kfz.de",
+        "email",
+        "Benachrichtigungs-E-Mail",
+      ],
+      ["system", "date_format", "DD.MM.YYYY", "string", "Datumsformat"],
+      ["system", "time_format", "24h", "string", "Zeitformat (12h/24h)"],
+      ["system", "timezone", "Europe/Berlin", "string", "Zeitzone"],
+
+      // Templates
+      [
+        "templates",
+        "invoice_template",
+        JSON.stringify({
+          header: {
+            showLogo: true,
+            showCompanyInfo: true,
+            showCustomerInfo: true,
+            layout: "standard",
+          },
+          content: {
+            showItemNumbers: true,
+            showDescriptions: true,
+            showQuantity: true,
+            showUnitPrice: true,
+            showTotalPrice: true,
+            groupByCategory: false,
+          },
+          footer: {
+            showTerms: true,
+            showPaymentInfo: true,
+            showTaxInfo: true,
+            customText: "Vielen Dank für Ihr Vertrauen!",
+          },
+          styling: {
+            colorScheme: "blue",
+            fontSize: "normal",
+            spacing: "normal",
+          },
+        }),
+        "json",
+        "Rechnungs-Template",
+      ],
+
+      [
+        "templates",
+        "estimate_template",
+        JSON.stringify({
+          header: {
+            showLogo: true,
+            showCompanyInfo: true,
+            showCustomerInfo: true,
+            showValidUntil: true,
+            layout: "standard",
+          },
+          content: {
+            showItemNumbers: true,
+            showDescriptions: true,
+            showQuantity: true,
+            showUnitPrice: true,
+            showTotalPrice: true,
+            showLabor: true,
+            showParts: true,
+            groupByCategory: true,
+          },
+          footer: {
+            showTerms: true,
+            showValidityNote: true,
+            customText: "Dieses Angebot ist freibleibend und unverbindlich.",
+          },
+          styling: {
+            colorScheme: "green",
+            fontSize: "normal",
+            spacing: "normal",
+          },
+        }),
+        "json",
+        "Kostenvoranschlag-Template",
+      ],
+
+      // Print/PDF Einstellungen
+      ["print", "page_size", "A4", "string", "Seitengröße"],
+      [
+        "print",
+        "orientation",
+        "portrait",
+        "string",
+        "Ausrichtung (portrait/landscape)",
+      ],
+      ["print", "margin_top", "20", "number", "Oberer Rand in mm"],
+      ["print", "margin_bottom", "20", "number", "Unterer Rand in mm"],
+      ["print", "margin_left", "15", "number", "Linker Rand in mm"],
+      ["print", "margin_right", "15", "number", "Rechter Rand in mm"],
+      ["print", "header_height", "80", "number", "Kopfzeilen-Höhe in mm"],
+      ["print", "footer_height", "40", "number", "Fußzeilen-Höhe in mm"],
+    ];
+
+    let insertedCount = 0;
+    let errors = [];
+
+    const insertSetting = (setting, callback) => {
+      db.run(
+        "INSERT OR IGNORE INTO settings (category, key, value, type, description) VALUES (?, ?, ?, ?, ?)",
+        setting,
+        function (err) {
+          if (err) {
+            errors.push(`${setting[0]}.${setting[1]}: ${err.message}`);
+          } else if (this.changes > 0) {
+            insertedCount++;
+            console.log(
+              `✅ Einstellung eingefügt: ${setting[0]}.${setting[1]}`
+            );
+          }
+          callback();
+        }
+      );
+    };
+
+    let processed = 0;
+    defaultSettings.forEach((setting) => {
+      insertSetting(setting, () => {
+        processed++;
+        if (processed === defaultSettings.length) {
+          if (errors.length > 0) {
+            console.error(
+              "❌ Einige Einstellungen konnten nicht eingefügt werden:",
+              errors
+            );
+            reject(new Error("Fehler beim Einfügen der Einstellungen"));
+          } else {
+            console.log(`✅ ${insertedCount} Standard-Einstellungen eingefügt`);
+            resolve();
+          }
+        }
+      });
+    });
+  });
+}
+
 // Tabellen erstellen
 function createTables(db) {
   return new Promise((resolve, reject) => {
@@ -695,6 +918,20 @@ async function setupDatabase() {
   }
 }
 
+async function setupSettingsDatabase() {
+  const db = getDbConnection();
+
+  try {
+    await createSettingsTable(db);
+    await insertDefaultSettings(db);
+    console.log("✅ Settings-Datenbank Setup abgeschlossen");
+  } catch (error) {
+    console.error("❌ Fehler beim Settings Setup:", error);
+  } finally {
+    db.close();
+  }
+}
+
 // Datenbank-Verbindung für API
 function getDbConnection() {
   return new sqlite3.Database(dbPath, (err) => {
@@ -705,6 +942,9 @@ function getDbConnection() {
 }
 
 module.exports = {
+  createSettingsTable,
+  insertDefaultSettings,
+  setupSettingsDatabase,
   setupDatabase,
   getDbConnection,
   dbPath,

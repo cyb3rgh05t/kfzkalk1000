@@ -120,6 +120,25 @@ window.api = {
     },
   },
 
+  // NEU: Settings API
+  settings: {
+    getAll: () => api.get("/settings"),
+    getCategory: (category) => api.get(`/settings/${category}`),
+    updateSetting: (category, key, value) =>
+      api.put(`/settings/${category}/${key}`, { value }),
+    updateCategory: (category, settings) =>
+      api.put(`/settings/${category}`, settings),
+    getTemplate: (type) => api.get(`/settings/templates/${type}`), // invoice oder estimate
+  },
+
+  // NEU: PDF API
+  pdf: {
+    generateInvoice: (id) => `/api/pdf/invoice/${id}`,
+    generateEstimate: (id) => `/api/pdf/estimate/${id}`,
+    previewInvoice: (id) => window.open(`/api/pdf/invoice/${id}`, "_blank"),
+    previewEstimate: (id) => window.open(`/api/pdf/estimate/${id}`, "_blank"),
+  },
+
   dashboard: {
     getStats: () => api.get("/dashboard"),
   },

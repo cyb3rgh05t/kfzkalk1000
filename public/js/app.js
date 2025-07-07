@@ -73,6 +73,7 @@ window.KFZKalk1000 = () => {
       color: "yellow",
     },
     { id: "invoices", label: "Rechnungen", icon: "fileText", color: "red" },
+    { id: "settings", name: "Einstellungen", icon: "settings" },
   ];
 
   // Render content based on active tab - FIXED: Echte Components verwenden
@@ -94,6 +95,8 @@ window.KFZKalk1000 = () => {
         return <EstimatesPlaceholder />;
       case "invoices":
         return <InvoicesPlaceholder />;
+      case "settings":
+        return <SettingsComponent />;
       default:
         return (
           <div className="text-center py-12">
