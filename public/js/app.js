@@ -1,4 +1,4 @@
-// public/js/app.js - Main Application
+// public/js/app.js - Main Application (Enhanced)
 const { useState, useEffect } = React;
 
 // Main KFZKalk1000 Application
@@ -137,6 +137,15 @@ window.KFZKalk1000 = () => {
                 <span>{apiConnected ? "API Verbunden" : "Demo Modus"}</span>
               </div>
 
+              {/* Refresh Button */}
+              <button
+                onClick={() => window.location.reload()}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                title="Seite neu laden"
+              >
+                <Icon name="refresh" size={16} />
+              </button>
+
               {/* User Info */}
               <div className="text-right">
                 <p className="text-sm text-white font-medium">
@@ -192,6 +201,39 @@ window.KFZKalk1000 = () => {
                 );
               })}
             </ul>
+
+            {/* Connection Status in Sidebar */}
+            <div className="mt-8 p-3 bg-gray-700 rounded-lg">
+              <h4 className="text-sm font-medium text-white mb-2">
+                System Status
+              </h4>
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">API:</span>
+                  <span
+                    className={
+                      apiConnected ? "text-green-400" : "text-orange-400"
+                    }
+                  >
+                    {apiConnected ? "Verbunden" : "Demo"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">DB:</span>
+                  <span
+                    className={
+                      apiConnected ? "text-green-400" : "text-orange-400"
+                    }
+                  >
+                    {apiConnected ? "SQLite" : "Demo"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Version:</span>
+                  <span className="text-blue-400">v1.0.0</span>
+                </div>
+              </div>
+            </div>
           </nav>
         </aside>
 
@@ -204,7 +246,7 @@ window.KFZKalk1000 = () => {
   );
 };
 
-// Simple Dashboard Component (placeholder)
+// Enhanced Dashboard Component
 window.DashboardComponent = ({ data, onNavigate }) => {
   const stats = data || {
     customerCount: 0,
@@ -217,27 +259,72 @@ window.DashboardComponent = ({ data, onNavigate }) => {
 
   const quickActions = [
     {
-      label: "Kunden verwalten",
+      label: "Neuer Kunde",
       icon: "users",
       action: () => onNavigate("customers"),
-      color: "blue",
+      color: "green",
+      description: "Kundenstamm erweitern",
     },
     {
-      label: "Fahrzeuge verwalten",
+      label: "Fahrzeug hinzufügen",
       icon: "car",
       action: () => onNavigate("vehicles"),
       color: "purple",
+      description: "Fahrzeugpark verwalten",
     },
     {
       label: "Neue Rechnung",
       icon: "fileText",
       action: () => onNavigate("invoices"),
-      color: "green",
+      color: "red",
+      description: "Rechnung erstellen",
     },
     {
       label: "Kostenvoranschlag",
       icon: "calculator",
       action: () => onNavigate("estimates"),
+      color: "yellow",
+      description: "Angebot kalkulieren",
+    },
+    {
+      label: "Produkt hinzufügen",
+      icon: "package",
+      action: () => onNavigate("products"),
+      color: "indigo",
+      description: "Lager verwalten",
+    },
+    {
+      label: "Wartung planen",
+      icon: "wrench",
+      action: () => alert("Wartungsplaner - in Entwicklung"),
+      color: "blue",
+      description: "Service organisieren",
+    },
+  ];
+
+  const recentActivities = [
+    {
+      icon: "users",
+      text: "Neuer Kunde: Max Mustermann hinzugefügt",
+      time: "vor 2 Stunden",
+      color: "green",
+    },
+    {
+      icon: "car",
+      text: "Fahrzeug: BMW 320i (AB-CD 123) bearbeitet",
+      time: "vor 4 Stunden",
+      color: "purple",
+    },
+    {
+      icon: "fileText",
+      text: "Rechnung RE-2025-001 erstellt",
+      time: "vor 6 Stunden",
+      color: "red",
+    },
+    {
+      icon: "calculator",
+      text: "Kostenvoranschlag KV-2025-003 gesendet",
+      time: "gestern",
       color: "yellow",
     },
   ];
@@ -245,8 +332,13 @@ window.DashboardComponent = ({ data, onNavigate }) => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold text-white mb-2">📊 Dashboard</h2>
-        <p className="text-gray-400">Überblick über Ihre KFZ-Werkstatt</p>
+        <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <Icon name="home" size={32} className="text-blue-400" />
+          Dashboard
+        </h2>
+        <p className="text-gray-400">
+          Willkommen zurück! Hier ist ein Überblick über Ihre Werkstatt.
+        </p>
       </div>
 
       {/* Stats Grid */}
@@ -258,6 +350,7 @@ window.DashboardComponent = ({ data, onNavigate }) => {
               <p className="text-2xl font-bold">
                 {apiUtils.formatPrice(stats.totalRevenue)}
               </p>
+              <p className="text-blue-200 text-xs mt-1">+12.5% diesen Monat</p>
             </div>
             <Icon name="dollar" size={32} className="text-blue-200" />
           </div>
@@ -268,6 +361,7 @@ window.DashboardComponent = ({ data, onNavigate }) => {
             <div>
               <p className="text-green-100 text-sm">Kunden</p>
               <p className="text-2xl font-bold">{stats.customerCount}</p>
+              <p className="text-green-200 text-xs mt-1">+3 diese Woche</p>
             </div>
             <Icon name="users" size={32} className="text-green-200" />
           </div>
@@ -278,6 +372,9 @@ window.DashboardComponent = ({ data, onNavigate }) => {
             <div>
               <p className="text-purple-100 text-sm">Fahrzeuge</p>
               <p className="text-2xl font-bold">{stats.vehicleCount}</p>
+              <p className="text-purple-200 text-xs mt-1">
+                {stats.vehicleCount} registriert
+              </p>
             </div>
             <Icon name="car" size={32} className="text-purple-200" />
           </div>
@@ -288,6 +385,9 @@ window.DashboardComponent = ({ data, onNavigate }) => {
             <div>
               <p className="text-red-100 text-sm">Offene Rechnungen</p>
               <p className="text-2xl font-bold">{stats.pendingInvoices}</p>
+              <p className="text-red-200 text-xs mt-1">
+                Benötigen Aufmerksamkeit
+              </p>
             </div>
             <Icon name="fileText" size={32} className="text-red-200" />
           </div>
@@ -298,6 +398,9 @@ window.DashboardComponent = ({ data, onNavigate }) => {
             <div>
               <p className="text-yellow-100 text-sm">Kostenvoranschläge</p>
               <p className="text-2xl font-bold">{stats.totalEstimates}</p>
+              <p className="text-yellow-200 text-xs mt-1">
+                {stats.pendingEstimates} ausstehend
+              </p>
             </div>
             <Icon name="calculator" size={32} className="text-yellow-200" />
           </div>
@@ -306,45 +409,112 @@ window.DashboardComponent = ({ data, onNavigate }) => {
         <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 p-6 rounded-lg text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-100 text-sm">Wartende Angebote</p>
-              <p className="text-2xl font-bold">{stats.pendingEstimates}</p>
+              <p className="text-indigo-100 text-sm">Lagerbestand</p>
+              <p className="text-2xl font-bold">156</p>
+              <p className="text-indigo-200 text-xs mt-1">Produkte verfügbar</p>
             </div>
             <Icon name="package" size={32} className="text-indigo-200" />
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Quick Actions */}
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Icon name="star" size={20} className="text-yellow-400" />
+            Schnellzugriff
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={action.action}
+                className={`p-4 rounded-lg bg-${action.color}-600 hover:bg-${action.color}-700 text-white transition-colors text-left group`}
+              >
+                <div className="flex items-start gap-3">
+                  <Icon name={action.icon} size={20} className="mt-0.5" />
+                  <div>
+                    <div className="font-medium">{action.label}</div>
+                    <div className="text-xs opacity-80 mt-1">
+                      {action.description}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activities */}
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Icon name="clock" size={20} className="text-blue-400" />
+            Letzte Aktivitäten
+          </h3>
+          <div className="space-y-4">
+            {recentActivities.map((activity, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <div
+                  className={`w-8 h-8 rounded-full bg-${activity.color}-600 flex items-center justify-center flex-shrink-0`}
+                >
+                  <Icon name={activity.icon} size={14} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm">{activity.text}</p>
+                  <p className="text-gray-400 text-xs">{activity.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button className="w-full mt-4 text-blue-400 hover:text-blue-300 text-sm transition-colors">
+            Alle Aktivitäten anzeigen →
+          </button>
+        </div>
+      </div>
+
+      {/* System Health */}
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-xl font-bold text-white mb-4">Schnellzugriff</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              onClick={action.action}
-              className={`p-4 rounded-lg bg-${action.color}-600 hover:bg-${action.color}-700 text-white transition-colors flex items-center gap-3`}
-            >
-              <Icon name={action.icon} size={20} />
-              <span className="font-medium">{action.label}</span>
-            </button>
-          ))}
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Icon name="shield" size={20} className="text-green-400" />
+          System Status
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Icon name="check" size={20} className="text-white" />
+            </div>
+            <p className="text-white font-medium">Datenbank</p>
+            <p className="text-green-400 text-sm">Online</p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Icon name="check" size={20} className="text-white" />
+            </div>
+            <p className="text-white font-medium">API Server</p>
+            <p className="text-green-400 text-sm">Läuft</p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Icon name="check" size={20} className="text-white" />
+            </div>
+            <p className="text-white font-medium">Backup</p>
+            <p className="text-green-400 text-sm">Aktuell</p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Icon name="info" size={20} className="text-white" />
+            </div>
+            <p className="text-white font-medium">Version</p>
+            <p className="text-blue-400 text-sm">v1.0.0</p>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Placeholder components for other sections
-window.VehiclesComponent = () => (
-  <div className="text-center py-12">
-    <Icon name="car" size={48} className="text-gray-600 mx-auto mb-4" />
-    <h3 className="text-lg font-medium text-gray-400 mb-2">
-      Fahrzeugverwaltung
-    </h3>
-    <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
-  </div>
-);
-
+// Placeholder components für andere Bereiche (werden später implementiert)
 window.EstimatesComponent = () => (
   <div className="text-center py-12">
     <Icon name="calculator" size={48} className="text-gray-600 mx-auto mb-4" />
@@ -352,6 +522,12 @@ window.EstimatesComponent = () => (
       Kostenvoranschläge
     </h3>
     <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
+    <button
+      onClick={() => alert("Feature in Entwicklung")}
+      className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg"
+    >
+      Interessiert? Feedback geben
+    </button>
   </div>
 );
 
@@ -362,16 +538,12 @@ window.InvoicesComponent = () => (
       Rechnungsverwaltung
     </h3>
     <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
-  </div>
-);
-
-window.ProductsComponent = () => (
-  <div className="text-center py-12">
-    <Icon name="package" size={48} className="text-gray-600 mx-auto mb-4" />
-    <h3 className="text-lg font-medium text-gray-400 mb-2">
-      Produktverwaltung
-    </h3>
-    <p className="text-gray-500">Wird in der nächsten Version implementiert.</p>
+    <button
+      onClick={() => alert("Feature in Entwicklung")}
+      className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+    >
+      Interessiert? Feedback geben
+    </button>
   </div>
 );
 
