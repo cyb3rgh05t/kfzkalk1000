@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KFZKalk1000 - KFZ Rechnungsprogramm</title>
+
+    <!-- External Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+          sans-serif;
+        background-color: #111827;
+        color: white;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #374151;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #6b7280;
+        border-radius: 4px;
+      }
+
+      .fade-in {
+        animation: fadeIn 0.3s ease-in;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div
+        class="min-h-screen bg-gray-900 text-white flex items-center justify-center"
+      >
+        <div class="text-center">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"
+          ></div>
+          <p class="text-gray-400">KFZKalk1000 wird geladen...</p>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      // API Helper
+      const api = {
+        get: async (endpoint) => {
+          try {
+            const response = await fetch("/api" + endpoint);
+            return response.json();
+          } catch (error) {
+            console.error("API Error:", error);
+            return { error: error.message };
+          }
+        },
+        post: async (endpoint, data) => {
+          try {
+            const response = await fetch("/api" + endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            return response.json();
+          } catch (error) {
+            console.error("API Error:", error);
+            return { error: error.message };
+          }
+        },
+        put: async (endpoint, data) => {
+          try {
+            const response = await fetch("/api" + endpoint, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+            return response.json();
+          } catch (error) {
+            console.error("API Error:", error);
+            return { error: error.message };
+          }
+        },
+        delete: async (endpoint) => {
+          try {
+            const response = await fetch("/api" + endpoint, {
+              method: "DELETE",
+            });
+            return response.json();
+          } catch (error) {
+            console.error("API Error:", error);
+            return { error: error.message };
+          }
+        },
+      };
+
+      // Icon Component mit allen benötigten Icons
+      const Icon = ({ name, size = 18, className = "" }) => {
+        const iconSize = `${size}px`;
+
+        const icons = {
+          home: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9,22 9,12 15,12 15,22" />
+            </svg>
+          ),
+          users: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="m22 21-6-6" />
+            </svg>
+          ),
+          car: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.7 10H5.3L3.5 11.1C2.7 11.3 2 12.1 2 13v3c0 .6.4 1 1 1h2" />
+              <circle cx="7" cy="17" r="2" />
+              <path d="M9 17h6" />
+              <circle cx="17" cy="17" r="2" />
+            </svg>
+          ),
+          fileText: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+              <polyline points="14,2 14,8 20,8" />
+            </svg>
+          ),
+          package: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7l3-7z" />
+            </svg>
+          ),
+          calculator: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <rect x="4" y="2" width="16" height="20" rx="2" />
+              <line x1="8" y1="6" x2="16" y2="6" />
+              <line x1="16" y1="10" x2="16" y2="10" />
+              <line x1="12" y1="10" x2="12" y2="10" />
+              <line x1="8" y1="10" x2="8" y2="10" />
+            </svg>
+          ),
+          plus: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 12h8" />
+              <path d="M12 8v8" />
+            </svg>
+          ),
+          edit: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            </svg>
+          ),
+          trash: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+            </svg>
+          ),
+          save: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            </svg>
+          ),
+          x: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          ),
+          dollar: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          ),
+          wrench: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+          ),
+          settings: (
+            <svg
+              width={iconSize}
+              height={iconSize}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={className}
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v6m0 6v6" />
+            </svg>
+          ),
+        };
+
+        return icons[name] || icons.home;
+      };
+
+      // Main KFZKalk1000 Application
+      const KFZKalk1000 = () => {
+        const [activeTab, setActiveTab] = useState("dashboard");
+        const [customers, setCustomers] = useState([]);
+        const [vehicles, setVehicles] = useState([]);
+        const [invoices, setInvoices] = useState([]);
+        const [products, setProducts] = useState([]);
+        const [estimates, setEstimates] = useState([]);
+        const [dashboardData, setDashboardData] = useState({});
+        const [showModal, setShowModal] = useState(false);
+        const [modalType, setModalType] = useState("");
+        const [editingItem, setEditingItem] = useState(null);
+        const [apiConnected, setApiConnected] = useState(false);
+
+        // Daten laden
+        useEffect(() => {
+          checkApiConnection();
+        }, []);
+
+        const checkApiConnection = async () => {
+          const healthCheck = await api.get("/health");
+          if (healthCheck && !healthCheck.error) {
+            setApiConnected(true);
+            loadData();
+          }
+        };
+
+        const loadData = async () => {
+          try {
+            // Versuche echte API-Daten zu laden
+            const [
+              customersData,
+              vehiclesData,
+              invoicesData,
+              productsData,
+              estimatesData,
+              dashData,
+            ] = await Promise.all([
+              api.get("/customers"),
+              api.get("/vehicles"),
+              api.get("/invoices"),
+              api.get("/products"),
+              api.get("/estimates"),
+              api.get("/dashboard"),
+            ]);
+
+            // Nur setzen wenn keine Fehler
+            if (!customersData.error) setCustomers(customersData);
+            if (!vehiclesData.error) setVehicles(vehiclesData);
+            if (!invoicesData.error) setInvoices(invoicesData);
+            if (!productsData.error) setProducts(productsData);
+            if (!estimatesData.error) setEstimates(estimatesData);
+            if (!dashData.error) setDashboardData(dashData);
+          } catch (error) {
+            console.log("API nicht verfügbar, verwende Demo-Daten");
+            loadDemoData();
+          }
+        };
+
+        const loadDemoData = () => {
+          // Demo-Daten falls API nicht verfügbar
+          setCustomers([
+            {
+              id: 1,
+              name: "Max Mustermann",
+              email: "max@example.com",
+              phone: "0123-456789",
+              address: "Musterstraße 1, 12345 Musterstadt",
+            },
+            {
+              id: 2,
+              name: "Maria Schmidt",
+              email: "maria@example.com",
+              phone: "0987-654321",
+              address: "Beispielweg 5, 54321 Beispielstadt",
+            },
+          ]);
+
+          setVehicles([
+            {
+              id: 1,
+              customer_id: 1,
+              customer_name: "Max Mustermann",
+              brand: "BMW",
+              model: "320i",
+              year: 2020,
+              license_plate: "AB-CD 123",
+              vin: "WBAA12345678901234",
+              mileage: 45000,
+            },
+            {
+              id: 2,
+              customer_id: 2,
+              customer_name: "Maria Schmidt",
+              brand: "Mercedes",
+              model: "C200",
+              year: 2019,
+              license_plate: "XY-Z 789",
+              vin: "WDD12345678901234",
+              mileage: 38000,
+            },
+          ]);
+
+          setProducts([
+            {
+              id: 1,
+              name: "Motoröl 5W-30",
+              price: 45.0,
+              stock: 25,
+              category: "Öle",
+              description: "Hochwertiges Motoröl für moderne Motoren",
+            },
+            {
+              id: 2,
+              name: "Bremsbeläge vorne",
+              price: 89.0,
+              stock: 8,
+              category: "Bremsen",
+              description: "Bremsbeläge für Vorderachse",
+            },
+          ]);
+
+          setInvoices([
+            {
+              id: 1,
+              customer_id: 1,
+              customer_name: "Max Mustermann",
+              vehicle_info: "BMW 320i (AB-CD 123)",
+              invoice_number: "RE-2025-001",
+              date: "2025-01-15",
+              amount: 450.0,
+              status: "paid",
+              description: "Ölwechsel und Inspektion",
+            },
+            {
+              id: 2,
+              customer_id: 2,
+              customer_name: "Maria Schmidt",
+              vehicle_info: "Mercedes C200 (XY-Z 789)",
+              invoice_number: "RE-2025-002",
+              date: "2025-01-10",
+              amount: 280.0,
+              status: "pending",
+              description: "Bremsbeläge wechseln",
+            },
+          ]);
+
+          setEstimates([
+            {
+              id: 1,
+              customer_id: 1,
+              customer_name: "Max Mustermann",
+              vehicle_info: "BMW 320i (AB-CD 123)",
+              estimate_number: "KV-2025-001",
+              date: "2025-01-05",
+              valid_until: "2025-02-05",
+              status: "sent",
+              total_amount: 420.0,
+              description: "Bremsbeläge und Ölwechsel",
+              notes: "Bremsbeläge vorne und hinten, Motoröl 5W-30",
+            },
+          ]);
+
+          setDashboardData({
+            customerCount: 2,
+            vehicleCount: 2,
+            totalRevenue: 730.0,
+            pendingInvoices: 1,
+            totalEstimates: 1,
+            pendingEstimates: 1,
+          });
+        };
+
+        // Dashboard Content
+        const renderDashboard = () => {
+          return React.createElement("div", { className: "space-y-6" }, [
+            React.createElement(
+              "h2",
+              { key: "title", className: "text-3xl font-bold text-white mb-6" },
+              "📊 Dashboard"
+            ),
+
+            React.createElement(
+              "div",
+              {
+                className: "grid grid-cols-1 md:grid-cols-3 gap-6",
+                key: "stats1",
+              },
+              [
+                React.createElement(
+                  "div",
+                  {
+                    className:
+                      "bg-gradient-to-r from-blue-600 to-blue-800 p-6 rounded-lg text-white",
+                  },
+                  [
+                    React.createElement(
+                      "div",
+                      { className: "flex items-center justify-between" },
+                      [
+                        React.createElement("div", {}, [
+                          React.createElement(
+                            "p",
+                            { className: "text-blue-100" },
+                            "Gesamtumsatz"
+                          ),
+                          React.createElement(
+                            "p",
+                            { className: "text-2xl font-bold" },
+                            (dashboardData.totalRevenue || 0).toFixed(2) + " €"
+                          ),
+                        ]),
+                        React.createElement(Icon, {
+                          name: "dollar",
+                          size: 32,
+                          className: "text-blue-200",
+                        }),
+                      ]
+                    ),
+                  ]
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    className:
+                      "bg-gradient-to-r from-green-600 to-green-800 p-6 rounded-lg text-white",
+                  },
+                  [
+                    React.createElement(
+                      "div",
+                      { className: "flex items-center justify-between" },
+                      [
+                        React.createElement("div", {}, [
+                          React.createElement(
+                            "p",
+                            { className: "text-green-100" },
+                            "Kunden"
+                          ),
+                          React.createElement(
+                            "p",
+                            { className: "text-2xl font-bold" },
+                            dashboardData.customerCount || 0
+                          ),
+                        ]),
+                        React.createElement(Icon, {
+                          name: "users",
+                          size: 32,
+                          className: "text-green-200",
+                        }),
+                      ]
+                    ),
+                  ]
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    className:
+                      "bg-gradient-to-r from-purple-600 to-purple-800 p-6 rounded-lg text-white",
+                  },
+                  [
+                    React.createElement(
+                      "div",
+                      { className: "flex items-center justify-between" },
+                      [
+                        React.createElement("div", {}, [
+                          React.createElement(
+                            "p",
+                            { className: "text-purple-100" },
+                            "Fahrzeuge"
+                          ),
+                          React.createElement(
+                            "p",
+                            { className: "text-2xl font-bold" },
+                            dashboardData.vehicleCount || 0
+                          ),
+                        ]),
+                        React.createElement(Icon, {
+                          name: "car",
+                          size: 32,
+                          className: "text-purple-200",
+                        }),
+                      ]
+                    ),
+                  ]
+                ),
+              ]
+            ),
+
+            React.createElement(
+              "div",
+              {
+                className: "grid grid-cols-1 md:grid-cols-2 gap-6",
+                key: "recent",
+              },
+              [
+                React.createElement(
+                  "div",
+                  {
+                    className:
+                      "bg-gray-800 rounded-lg p-6 border border-gray-700",
+                  },
+                  [
+                    React.createElement(
+                      "h3",
+                      { className: "text-xl font-bold text-white mb-4" },
+                      "Letzte Rechnungen"
+                    ),
+                    React.createElement(
+                      "div",
+                      { className: "space-y-3" },
+                      invoices.slice(0, 3).map((invoice) =>
+                        React.createElement(
+                          "div",
+                          {
+                            key: invoice.id,
+                            className:
+                              "flex justify-between items-center p-3 bg-gray-700 rounded",
+                          },
+                          [
+                            React.createElement("div", {}, [
+                              React.createElement(
+                                "p",
+                                { className: "text-white font-medium" },
+                                invoice.customer_name || "Unbekannt"
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                invoice.description || ""
+                              ),
+                            ]),
+                            React.createElement(
+                              "div",
+                              { className: "text-right" },
+                              [
+                                React.createElement(
+                                  "p",
+                                  { className: "text-white font-bold" },
+                                  (invoice.amount || 0).toFixed(2) + " €"
+                                ),
+                                React.createElement(
+                                  "span",
+                                  {
+                                    className:
+                                      "text-xs px-2 py-1 rounded " +
+                                      (invoice.status === "paid"
+                                        ? "bg-green-600 text-white"
+                                        : "bg-orange-600 text-white"),
+                                  },
+                                  invoice.status === "paid"
+                                    ? "Bezahlt"
+                                    : "Offen"
+                                ),
+                              ]
+                            ),
+                          ]
+                        )
+                      )
+                    ),
+                  ]
+                ),
+                React.createElement(
+                  "div",
+                  {
+                    className:
+                      "bg-gray-800 rounded-lg p-6 border border-gray-700",
+                  },
+                  [
+                    React.createElement(
+                      "h3",
+                      { className: "text-xl font-bold text-white mb-4" },
+                      "Schnellzugriff"
+                    ),
+                    React.createElement("div", { className: "space-y-3" }, [
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: () => setActiveTab("customers"),
+                          className:
+                            "w-full text-left p-3 bg-blue-600 hover:bg-blue-700 rounded flex items-center gap-3",
+                        },
+                        [
+                          React.createElement(Icon, {
+                            name: "users",
+                            size: 20,
+                          }),
+                          "Kunden verwalten",
+                        ]
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: () => setActiveTab("vehicles"),
+                          className:
+                            "w-full text-left p-3 bg-purple-600 hover:bg-purple-700 rounded flex items-center gap-3",
+                        },
+                        [
+                          React.createElement(Icon, { name: "car", size: 20 }),
+                          "Fahrzeuge verwalten",
+                        ]
+                      ),
+                      React.createElement(
+                        "button",
+                        {
+                          onClick: () => setActiveTab("invoices"),
+                          className:
+                            "w-full text-left p-3 bg-green-600 hover:bg-green-700 rounded flex items-center gap-3",
+                        },
+                        [
+                          React.createElement(Icon, {
+                            name: "fileText",
+                            size: 20,
+                          }),
+                          "Neue Rechnung",
+                        ]
+                      ),
+                    ]),
+                  ]
+                ),
+              ]
+            ),
+          ]);
+        };
+
+        // Customers Content
+        const renderCustomers = () => {
+          return React.createElement("div", { className: "space-y-6" }, [
+            React.createElement(
+              "div",
+              { className: "flex justify-between items-center", key: "header" },
+              [
+                React.createElement(
+                  "h2",
+                  { className: "text-3xl font-bold text-white" },
+                  "👥 Kundenverwaltung"
+                ),
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => alert("Modal-System wird implementiert"),
+                    className:
+                      "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2",
+                  },
+                  [
+                    React.createElement(Icon, { name: "plus", size: 16 }),
+                    "Neuer Kunde",
+                  ]
+                ),
+              ]
+            ),
+            React.createElement(
+              "div",
+              {
+                className: "bg-gray-800 rounded-lg border border-gray-700",
+                key: "content",
+              },
+              [
+                React.createElement(
+                  "div",
+                  { className: "divide-y divide-gray-700" },
+                  customers.map((customer) =>
+                    React.createElement(
+                      "div",
+                      {
+                        key: customer.id,
+                        className: "p-4 hover:bg-gray-700",
+                      },
+                      [
+                        React.createElement(
+                          "div",
+                          { className: "flex justify-between items-start" },
+                          [
+                            React.createElement("div", {}, [
+                              React.createElement(
+                                "h3",
+                                { className: "font-medium text-white text-lg" },
+                                customer.name
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "📧 " + customer.email
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "📞 " + customer.phone
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "📍 " + customer.address
+                              ),
+                            ]),
+                            React.createElement(
+                              "div",
+                              { className: "flex space-x-2" },
+                              [
+                                React.createElement(
+                                  "button",
+                                  {
+                                    onClick: () =>
+                                      alert(
+                                        "Bearbeiten-Funktion wird implementiert"
+                                      ),
+                                    className:
+                                      "text-blue-400 hover:text-blue-300 p-2 rounded",
+                                  },
+                                  React.createElement(Icon, {
+                                    name: "edit",
+                                    size: 16,
+                                  })
+                                ),
+                                React.createElement(
+                                  "button",
+                                  {
+                                    onClick: () =>
+                                      alert(
+                                        "Löschen-Funktion wird implementiert"
+                                      ),
+                                    className:
+                                      "text-red-400 hover:text-red-300 p-2 rounded",
+                                  },
+                                  React.createElement(Icon, {
+                                    name: "trash",
+                                    size: 16,
+                                  })
+                                ),
+                              ]
+                            ),
+                          ]
+                        ),
+                      ]
+                    )
+                  )
+                ),
+              ]
+            ),
+          ]);
+        };
+
+        // Vehicles Content
+        const renderVehicles = () => {
+          return React.createElement("div", { className: "space-y-6" }, [
+            React.createElement(
+              "div",
+              { className: "flex justify-between items-center", key: "header" },
+              [
+                React.createElement(
+                  "h2",
+                  { className: "text-3xl font-bold text-white" },
+                  "🚗 Fahrzeugverwaltung"
+                ),
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => alert("Modal-System wird implementiert"),
+                    className:
+                      "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2",
+                  },
+                  [
+                    React.createElement(Icon, { name: "plus", size: 16 }),
+                    "Neues Fahrzeug",
+                  ]
+                ),
+              ]
+            ),
+            React.createElement(
+              "div",
+              {
+                className: "bg-gray-800 rounded-lg border border-gray-700",
+                key: "content",
+              },
+              [
+                React.createElement(
+                  "div",
+                  { className: "divide-y divide-gray-700" },
+                  vehicles.map((vehicle) =>
+                    React.createElement(
+                      "div",
+                      {
+                        key: vehicle.id,
+                        className: "p-4 hover:bg-gray-700",
+                      },
+                      [
+                        React.createElement(
+                          "div",
+                          { className: "flex justify-between items-start" },
+                          [
+                            React.createElement("div", {}, [
+                              React.createElement(
+                                "h3",
+                                { className: "font-medium text-white text-lg" },
+                                vehicle.brand + " " + vehicle.model
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "👤 Besitzer: " +
+                                  (vehicle.customer_name || "Unbekannt")
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "🏷️ Kennzeichen: " + vehicle.license_plate
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "📅 Baujahr: " +
+                                  vehicle.year +
+                                  " | 🛣️ KM: " +
+                                  (vehicle.mileage || 0).toLocaleString()
+                              ),
+                            ]),
+                            React.createElement(
+                              "div",
+                              { className: "flex space-x-2" },
+                              [
+                                React.createElement(
+                                  "button",
+                                  {
+                                    onClick: () =>
+                                      alert(
+                                        "Bearbeiten-Funktion wird implementiert"
+                                      ),
+                                    className:
+                                      "text-blue-400 hover:text-blue-300 p-2 rounded",
+                                  },
+                                  React.createElement(Icon, {
+                                    name: "edit",
+                                    size: 16,
+                                  })
+                                ),
+                                React.createElement(
+                                  "button",
+                                  {
+                                    onClick: () =>
+                                      alert(
+                                        "Löschen-Funktion wird implementiert"
+                                      ),
+                                    className:
+                                      "text-red-400 hover:text-red-300 p-2 rounded",
+                                  },
+                                  React.createElement(Icon, {
+                                    name: "trash",
+                                    size: 16,
+                                  })
+                                ),
+                              ]
+                            ),
+                          ]
+                        ),
+                      ]
+                    )
+                  )
+                ),
+              ]
+            ),
+          ]);
+        };
+
+        // Products Content
+        const renderProducts = () => {
+          return React.createElement("div", { className: "space-y-6" }, [
+            React.createElement(
+              "div",
+              { className: "flex justify-between items-center", key: "header" },
+              [
+                React.createElement(
+                  "h2",
+                  { className: "text-3xl font-bold text-white" },
+                  "📦 Produktverwaltung"
+                ),
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => alert("Modal-System wird implementiert"),
+                    className:
+                      "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2",
+                  },
+                  [
+                    React.createElement(Icon, { name: "plus", size: 16 }),
+                    "Neues Produkt",
+                  ]
+                ),
+              ]
+            ),
+            React.createElement(
+              "div",
+              {
+                className: "bg-gray-800 rounded-lg border border-gray-700",
+                key: "content",
+              },
+              [
+                React.createElement(
+                  "div",
+                  { className: "divide-y divide-gray-700" },
+                  products.map((product) =>
+                    React.createElement(
+                      "div",
+                      {
+                        key: product.id,
+                        className: "p-4 hover:bg-gray-700",
+                      },
+                      [
+                        React.createElement(
+                          "div",
+                          { className: "flex justify-between items-start" },
+                          [
+                            React.createElement("div", {}, [
+                              React.createElement(
+                                "h3",
+                                { className: "font-medium text-white text-lg" },
+                                product.name
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "🏷️ Kategorie: " + product.category
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                "📦 Lagerbestand: " + product.stock + " Stück"
+                              ),
+                              React.createElement(
+                                "p",
+                                { className: "text-gray-400 text-sm" },
+                                product.description || ""
+                              ),
+                            ]),
+                            React.createElement(
+                              "div",
+                              { className: "text-right" },
+                              [
+                                React.createElement(
+                                  "p",
+                                  { className: "text-white font-bold text-xl" },
+                                  (product.price || 0).toFixed(2) + " €"
+                                ),
+                                React.createElement(
+                                  "div",
+                                  { className: "flex space-x-2 mt-2" },
+                                  [
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "Bearbeiten-Funktion wird implementiert"
+                                          ),
+                                        className:
+                                          "text-blue-400 hover:text-blue-300 p-2 rounded",
+                                      },
+                                      React.createElement(Icon, {
+                                        name: "edit",
+                                        size: 16,
+                                      })
+                                    ),
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "Löschen-Funktion wird implementiert"
+                                          ),
+                                        className:
+                                          "text-red-400 hover:text-red-300 p-2 rounded",
+                                      },
+                                      React.createElement(Icon, {
+                                        name: "trash",
+                                        size: 16,
+                                      })
+                                    ),
+                                  ]
+                                ),
+                              ]
+                            ),
+                          ]
+                        ),
+                      ]
+                    )
+                  )
+                ),
+              ]
+            ),
+          ]);
+        };
+
+        // Invoices Content
+        const renderInvoices = () => {
+          return React.createElement("div", { className: "space-y-6" }, [
+            React.createElement(
+              "div",
+              { className: "flex justify-between items-center", key: "header" },
+              [
+                React.createElement(
+                  "h2",
+                  { className: "text-3xl font-bold text-white" },
+                  "💰 Rechnungsverwaltung"
+                ),
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => alert("Modal-System wird implementiert"),
+                    className:
+                      "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2",
+                  },
+                  [
+                    React.createElement(Icon, { name: "plus", size: 16 }),
+                    "Neue Rechnung",
+                  ]
+                ),
+              ]
+            ),
+            React.createElement(
+              "div",
+              {
+                className: "bg-gray-800 rounded-lg border border-gray-700",
+                key: "content",
+              },
+              [
+                React.createElement(
+                  "div",
+                  { className: "divide-y divide-gray-700" },
+                  invoices.map((invoice) =>
+                    React.createElement(
+                      "div",
+                      {
+                        key: invoice.id,
+                        className: "p-4 hover:bg-gray-700",
+                      },
+                      [
+                        React.createElement(
+                          "div",
+                          { className: "flex justify-between items-start" },
+                          [
+                            React.createElement(
+                              "div",
+                              { className: "flex-1" },
+                              [
+                                React.createElement(
+                                  "div",
+                                  {
+                                    className:
+                                      "flex justify-between items-start mb-2",
+                                  },
+                                  [
+                                    React.createElement("div", {}, [
+                                      React.createElement(
+                                        "h3",
+                                        {
+                                          className:
+                                            "font-medium text-white text-lg",
+                                        },
+                                        invoice.invoice_number ||
+                                          "RE-" + invoice.id
+                                      ),
+                                      React.createElement(
+                                        "p",
+                                        { className: "text-gray-400 text-sm" },
+                                        "👤 Kunde: " +
+                                          (invoice.customer_name || "Unbekannt")
+                                      ),
+                                      React.createElement(
+                                        "p",
+                                        { className: "text-gray-400 text-sm" },
+                                        "🚗 Fahrzeug: " +
+                                          (invoice.vehicle_info || "Unbekannt")
+                                      ),
+                                    ]),
+                                    React.createElement(
+                                      "div",
+                                      { className: "text-right" },
+                                      [
+                                        React.createElement(
+                                          "p",
+                                          {
+                                            className:
+                                              "text-white font-bold text-xl",
+                                          },
+                                          (invoice.amount || 0).toFixed(2) +
+                                            " €"
+                                        ),
+                                        React.createElement(
+                                          "span",
+                                          {
+                                            className:
+                                              "text-xs px-3 py-1 rounded-full " +
+                                              (invoice.status === "paid"
+                                                ? "bg-green-600 text-white"
+                                                : "bg-orange-600 text-white"),
+                                          },
+                                          invoice.status === "paid"
+                                            ? "Bezahlt"
+                                            : "Offen"
+                                        ),
+                                      ]
+                                    ),
+                                  ]
+                                ),
+                                React.createElement(
+                                  "p",
+                                  { className: "text-gray-400 text-sm mb-2" },
+                                  invoice.description || ""
+                                ),
+                                React.createElement(
+                                  "div",
+                                  {
+                                    className:
+                                      "flex justify-between items-center text-xs text-gray-500 mb-3",
+                                  },
+                                  [
+                                    React.createElement(
+                                      "span",
+                                      {},
+                                      "📅 Erstellt: " + (invoice.date || "")
+                                    ),
+                                  ]
+                                ),
+                                React.createElement(
+                                  "div",
+                                  { className: "flex space-x-2" },
+                                  [
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "Bearbeiten-Funktion wird implementiert"
+                                          ),
+                                        className:
+                                          "text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1 px-2 py-1 rounded",
+                                      },
+                                      [
+                                        React.createElement(Icon, {
+                                          name: "edit",
+                                          size: 14,
+                                        }),
+                                        "Bearbeiten",
+                                      ]
+                                    ),
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "PDF-Export wird implementiert"
+                                          ),
+                                        className:
+                                          "text-green-400 hover:text-green-300 text-sm flex items-center gap-1 px-2 py-1 rounded",
+                                      },
+                                      [
+                                        React.createElement(Icon, {
+                                          name: "fileText",
+                                          size: 14,
+                                        }),
+                                        "PDF",
+                                      ]
+                                    ),
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "Löschen-Funktion wird implementiert"
+                                          ),
+                                        className:
+                                          "text-red-400 hover:text-red-300 text-sm flex items-center gap-1 px-2 py-1 rounded",
+                                      },
+                                      [
+                                        React.createElement(Icon, {
+                                          name: "trash",
+                                          size: 14,
+                                        }),
+                                        "Löschen",
+                                      ]
+                                    ),
+                                  ]
+                                ),
+                              ]
+                            ),
+                          ]
+                        ),
+                      ]
+                    )
+                  )
+                ),
+              ]
+            ),
+          ]);
+        };
+
+        // Estimates Content
+        const renderEstimates = () => {
+          return React.createElement("div", { className: "space-y-6" }, [
+            React.createElement(
+              "div",
+              { className: "flex justify-between items-center", key: "header" },
+              [
+                React.createElement(
+                  "h2",
+                  { className: "text-3xl font-bold text-white" },
+                  "🧮 Kostenvoranschläge"
+                ),
+                React.createElement(
+                  "button",
+                  {
+                    onClick: () => alert("Modal-System wird implementiert"),
+                    className:
+                      "bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2",
+                  },
+                  [
+                    React.createElement(Icon, { name: "plus", size: 16 }),
+                    "Neuer Kostenvoranschlag",
+                  ]
+                ),
+              ]
+            ),
+            React.createElement(
+              "div",
+              {
+                className: "bg-gray-800 rounded-lg border border-gray-700",
+                key: "content",
+              },
+              [
+                React.createElement(
+                  "div",
+                  { className: "divide-y divide-gray-700" },
+                  estimates.map((estimate) =>
+                    React.createElement(
+                      "div",
+                      {
+                        key: estimate.id,
+                        className: "p-4 hover:bg-gray-700",
+                      },
+                      [
+                        React.createElement(
+                          "div",
+                          { className: "flex justify-between items-start" },
+                          [
+                            React.createElement(
+                              "div",
+                              { className: "flex-1" },
+                              [
+                                React.createElement(
+                                  "div",
+                                  {
+                                    className:
+                                      "flex justify-between items-start mb-2",
+                                  },
+                                  [
+                                    React.createElement("div", {}, [
+                                      React.createElement(
+                                        "h3",
+                                        {
+                                          className:
+                                            "font-medium text-white text-lg",
+                                        },
+                                        estimate.estimate_number ||
+                                          "KV-" + estimate.id
+                                      ),
+                                      React.createElement(
+                                        "p",
+                                        { className: "text-gray-400 text-sm" },
+                                        "👤 Kunde: " +
+                                          (estimate.customer_name ||
+                                            "Unbekannt")
+                                      ),
+                                      React.createElement(
+                                        "p",
+                                        { className: "text-gray-400 text-sm" },
+                                        "🚗 Fahrzeug: " +
+                                          (estimate.vehicle_info || "Unbekannt")
+                                      ),
+                                    ]),
+                                    React.createElement(
+                                      "div",
+                                      { className: "text-right" },
+                                      [
+                                        React.createElement(
+                                          "p",
+                                          {
+                                            className:
+                                              "text-white font-bold text-xl",
+                                          },
+                                          (estimate.total_amount || 0).toFixed(
+                                            2
+                                          ) + " €"
+                                        ),
+                                        React.createElement(
+                                          "span",
+                                          {
+                                            className:
+                                              "text-xs px-3 py-1 rounded-full bg-blue-600 text-white",
+                                          },
+                                          estimate.status || "Entwurf"
+                                        ),
+                                      ]
+                                    ),
+                                  ]
+                                ),
+                                React.createElement(
+                                  "p",
+                                  { className: "text-gray-400 text-sm mb-2" },
+                                  estimate.description || ""
+                                ),
+                                React.createElement(
+                                  "div",
+                                  {
+                                    className:
+                                      "flex justify-between items-center text-xs text-gray-500 mb-3",
+                                  },
+                                  [
+                                    React.createElement(
+                                      "span",
+                                      {},
+                                      "📅 Erstellt: " + (estimate.date || "")
+                                    ),
+                                    React.createElement(
+                                      "span",
+                                      {},
+                                      "⏰ Gültig bis: " +
+                                        (estimate.valid_until || "")
+                                    ),
+                                  ]
+                                ),
+                                React.createElement(
+                                  "div",
+                                  { className: "flex space-x-2" },
+                                  [
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "Bearbeiten-Funktion wird implementiert"
+                                          ),
+                                        className:
+                                          "text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1 px-2 py-1 rounded",
+                                      },
+                                      [
+                                        React.createElement(Icon, {
+                                          name: "edit",
+                                          size: 14,
+                                        }),
+                                        "Bearbeiten",
+                                      ]
+                                    ),
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "PDF-Export wird implementiert"
+                                          ),
+                                        className:
+                                          "text-purple-400 hover:text-purple-300 text-sm flex items-center gap-1 px-2 py-1 rounded",
+                                      },
+                                      [
+                                        React.createElement(Icon, {
+                                          name: "fileText",
+                                          size: 14,
+                                        }),
+                                        "PDF",
+                                      ]
+                                    ),
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "In Rechnung umwandeln - wird implementiert"
+                                          ),
+                                        className:
+                                          "text-green-400 hover:text-green-300 text-sm flex items-center gap-1 px-2 py-1 rounded",
+                                      },
+                                      "➡️ Rechnung"
+                                    ),
+                                    React.createElement(
+                                      "button",
+                                      {
+                                        onClick: () =>
+                                          alert(
+                                            "Löschen-Funktion wird implementiert"
+                                          ),
+                                        className:
+                                          "text-red-400 hover:text-red-300 text-sm flex items-center gap-1 px-2 py-1 rounded",
+                                      },
+                                      [
+                                        React.createElement(Icon, {
+                                          name: "trash",
+                                          size: 14,
+                                        }),
+                                        "Löschen",
+                                      ]
+                                    ),
+                                  ]
+                                ),
+                              ]
+                            ),
+                          ]
+                        ),
+                      ]
+                    )
+                  )
+                ),
+              ]
+            ),
+          ]);
+        };
+
+        // Content renderer
+        const renderContent = () => {
+          switch (activeTab) {
+            case "dashboard":
+              return renderDashboard();
+            case "customers":
+              return renderCustomers();
+            case "vehicles":
+              return renderVehicles();
+            case "estimates":
+              return renderEstimates();
+            case "invoices":
+              return renderInvoices();
+            case "products":
+              return renderProducts();
+            default:
+              return React.createElement(
+                "div",
+                { className: "text-white" },
+                "Bereich wird geladen..."
+              );
+          }
+        };
+
+        return React.createElement(
+          "div",
+          { className: "min-h-screen bg-gray-900 text-white" },
+          [
+            // Header
+            React.createElement(
+              "header",
+              {
+                className: "bg-gray-800 border-b border-gray-700 p-4",
+                key: "header",
+              },
+              [
+                React.createElement(
+                  "div",
+                  { className: "flex items-center justify-between" },
+                  [
+                    React.createElement(
+                      "div",
+                      { className: "flex items-center space-x-3" },
+                      [
+                        React.createElement(
+                          "div",
+                          { className: "bg-blue-600 p-2 rounded-lg" },
+                          React.createElement(Icon, {
+                            name: "wrench",
+                            size: 24,
+                            className: "text-white",
+                          })
+                        ),
+                        React.createElement("div", {}, [
+                          React.createElement(
+                            "h1",
+                            { className: "text-2xl font-bold text-white" },
+                            "KFZKalk1000"
+                          ),
+                          React.createElement(
+                            "p",
+                            { className: "text-gray-400 text-sm" },
+                            "Professionelle KFZ-Rechnungssoftware"
+                          ),
+                        ]),
+                      ]
+                    ),
+                    React.createElement(
+                      "div",
+                      { className: "flex items-center space-x-4" },
+                      [
+                        React.createElement(
+                          "div",
+                          {
+                            className:
+                              "flex items-center space-x-2 " +
+                              (apiConnected
+                                ? "text-green-400"
+                                : "text-orange-400"),
+                          },
+                          [
+                            React.createElement("div", {
+                              className:
+                                "w-2 h-2 rounded-full " +
+                                (apiConnected
+                                  ? "bg-green-400"
+                                  : "bg-orange-400"),
+                            }),
+                            React.createElement(
+                              "span",
+                              { className: "text-sm" },
+                              apiConnected ? "API Verbunden" : "Demo Modus"
+                            ),
+                          ]
+                        ),
+                        React.createElement(
+                          "div",
+                          { className: "text-right" },
+                          [
+                            React.createElement(
+                              "p",
+                              { className: "text-sm text-white" },
+                              "Werkstatt Mustermann"
+                            ),
+                            React.createElement(
+                              "p",
+                              { className: "text-xs text-gray-400" },
+                              "Eingeloggt als Admin"
+                            ),
+                          ]
+                        ),
+                      ]
+                    ),
+                  ]
+                ),
+              ]
+            ),
+
+            React.createElement("div", { className: "flex", key: "main" }, [
+              // Sidebar
+              React.createElement(
+                "aside",
+                {
+                  className:
+                    "w-64 bg-gray-800 border-r border-gray-700 min-h-screen",
+                },
+                [
+                  React.createElement("nav", { className: "p-4" }, [
+                    React.createElement("ul", { className: "space-y-2" }, [
+                      React.createElement("li", {}, [
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setActiveTab("dashboard"),
+                            className:
+                              "w-full text-left p-3 rounded flex items-center space-x-3 " +
+                              (activeTab === "dashboard"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-300 hover:bg-gray-700"),
+                          },
+                          [
+                            React.createElement(Icon, {
+                              name: "home",
+                              size: 18,
+                            }),
+                            React.createElement("span", {}, "Dashboard"),
+                          ]
+                        ),
+                      ]),
+                      React.createElement("li", {}, [
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setActiveTab("customers"),
+                            className:
+                              "w-full text-left p-3 rounded flex items-center space-x-3 " +
+                              (activeTab === "customers"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-300 hover:bg-gray-700"),
+                          },
+                          [
+                            React.createElement(Icon, {
+                              name: "users",
+                              size: 18,
+                            }),
+                            React.createElement("span", {}, "Kunden"),
+                          ]
+                        ),
+                      ]),
+                      React.createElement("li", {}, [
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setActiveTab("vehicles"),
+                            className:
+                              "w-full text-left p-3 rounded flex items-center space-x-3 " +
+                              (activeTab === "vehicles"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-300 hover:bg-gray-700"),
+                          },
+                          [
+                            React.createElement(Icon, {
+                              name: "car",
+                              size: 18,
+                            }),
+                            React.createElement("span", {}, "Fahrzeuge"),
+                          ]
+                        ),
+                      ]),
+                      React.createElement("li", {}, [
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setActiveTab("estimates"),
+                            className:
+                              "w-full text-left p-3 rounded flex items-center space-x-3 " +
+                              (activeTab === "estimates"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-300 hover:bg-gray-700"),
+                          },
+                          [
+                            React.createElement(Icon, {
+                              name: "calculator",
+                              size: 18,
+                            }),
+                            React.createElement(
+                              "span",
+                              {},
+                              "Kostenvoranschläge"
+                            ),
+                          ]
+                        ),
+                      ]),
+                      React.createElement("li", {}, [
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setActiveTab("invoices"),
+                            className:
+                              "w-full text-left p-3 rounded flex items-center space-x-3 " +
+                              (activeTab === "invoices"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-300 hover:bg-gray-700"),
+                          },
+                          [
+                            React.createElement(Icon, {
+                              name: "fileText",
+                              size: 18,
+                            }),
+                            React.createElement("span", {}, "Rechnungen"),
+                          ]
+                        ),
+                      ]),
+                      React.createElement("li", {}, [
+                        React.createElement(
+                          "button",
+                          {
+                            onClick: () => setActiveTab("products"),
+                            className:
+                              "w-full text-left p-3 rounded flex items-center space-x-3 " +
+                              (activeTab === "products"
+                                ? "bg-blue-600 text-white"
+                                : "text-gray-300 hover:bg-gray-700"),
+                          },
+                          [
+                            React.createElement(Icon, {
+                              name: "package",
+                              size: 18,
+                            }),
+                            React.createElement("span", {}, "Produkte"),
+                          ]
+                        ),
+                      ]),
+                    ]),
+                  ]),
+                ]
+              ),
+
+              // Main Content
+              React.createElement(
+                "main",
+                { className: "flex-1 p-6" },
+                renderContent()
+              ),
+            ]),
+          ]
+        );
+      };
+
+      ReactDOM.render(
+        React.createElement(KFZKalk1000),
+        document.getElementById("root")
+      );
+    </script>
+  </body>
+</html>
